@@ -1,0 +1,460 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:StudioLog.ViewModels"
+        xmlns:models="using:StudioLog.Models"
+        xmlns:converters="using:StudioLog.Converters"
+        x:Class="StudioLog.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="StudioLog"
+        MinWidth="1200"
+        MinHeight="800"
+        Width="1400"
+        Height="900"
+        Background="#2d2d2d">
+
+    <!-- DataContext is set in code-behind to avoid double instantiation -->
+
+    <Window.Styles>
+        <!-- Flashing animation for TIMECODE IN button -->
+        <Style Selector="Button.flashing">
+            <Style.Animations>
+                <Animation Duration="0:0:0.5" IterationCount="Infinite">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="1.0"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="50%">
+                        <Setter Property="Opacity" Value="0.3"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="1.0"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        
+        <!-- Custom style for GENERATE/STOP button with dynamic hover colors -->
+        <Style Selector="Button.dynamicHover">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Name="PART_Border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter Name="PART_ContentPresenter"
+                                          Content="{TemplateBinding Content}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        
+        <Style Selector="Button.dynamicHover:pointerover /template/ Border#PART_Border">
+            <Setter Property="Background" Value="{ReflectionBinding GeneratorButtonHoverColor}"/>
+        </Style>
+        
+        <Style Selector="Button.dynamicHover:pressed /template/ Border#PART_Border">
+            <Setter Property="Background" Value="{ReflectionBinding GeneratorButtonPressedColor}"/>
+        </Style>
+        
+        <!-- Blue button (TIMECODE IN) hover - muted blue -->
+        <Style Selector="Button#TimecodeInButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#2563eb"/>
+        </Style>
+        <Style Selector="Button#TimecodeInButton:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#1d4ed8"/>
+        </Style>
+        
+        <!-- Orange button (TIMECODE OUT) hover - muted orange -->
+        <Style Selector="Button#TimecodeOutButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#ea580c"/>
+        </Style>
+        <Style Selector="Button#TimecodeOutButton:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#c2410c"/>
+        </Style>
+        
+        <!-- Purple button (MARK) hover - muted purple -->
+        <Style Selector="Button#MarkButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#9333ea"/>
+        </Style>
+        <Style Selector="Button#MarkButton:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#7e22ce"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        
+        <!-- Menu Bar -->
+        <Menu Grid.Row="0" Background="#1e1e1e">
+            <MenuItem Header="FILE" Foreground="White">
+                <MenuItem Header="New Session" Command="{Binding NewSessionCommand}"/>
+                <MenuItem Header="Save Session" Command="{Binding SaveSessionCommand}"/>
+                <MenuItem Header="Open Session" Command="{Binding OpenSessionCommand}"/>
+                <Separator/>
+                <MenuItem Header="Export">
+                    <MenuItem Header="Export to PDF" Command="{Binding ExportPdfCommand}"/>
+                    <MenuItem Header="Export to CSV" Command="{Binding ExportCsvCommand}"/>
+                    <MenuItem Header="Export to PNG" Command="{Binding ExportPngCommand}"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="Exit" Command="{Binding ExitCommand}"/>
+            </MenuItem>
+            <MenuItem Header="SETTINGS" Foreground="White">
+                <MenuItem Header="FRAME RATE">
+                    <MenuItem Header="24" 
+                              Command="{Binding SetFrameRateCommand}" 
+                              CommandParameter="24 fps"
+                              Icon="{Binding IsFrameRate24, Converter={x:Static converters:BoolToIconConverter.Instance}}"/>
+                    <MenuItem Header="25" 
+                              Command="{Binding SetFrameRateCommand}" 
+                              CommandParameter="25 fps"
+                              Icon="{Binding IsFrameRate25, Converter={x:Static converters:BoolToIconConverter.Instance}}"/>
+                    <MenuItem Header="29.97 DF" 
+                              Command="{Binding SetFrameRateCommand}" 
+                              CommandParameter="29.97 fps DF"
+                              Icon="{Binding IsFrameRate2997DF, Converter={x:Static converters:BoolToIconConverter.Instance}}"/>
+                    <MenuItem Header="29.97 NDF" 
+                              Command="{Binding SetFrameRateCommand}" 
+                              CommandParameter="29.97 fps NDF"
+                              Icon="{Binding IsFrameRate2997NDF, Converter={x:Static converters:BoolToIconConverter.Instance}}"/>
+                    <MenuItem Header="30" 
+                              Command="{Binding SetFrameRateCommand}" 
+                              CommandParameter="30 fps"
+                              Icon="{Binding IsFrameRate30, Converter={x:Static converters:BoolToIconConverter.Instance}}"/>
+                </MenuItem>
+                <MenuItem Header="AUDIO">
+                    <MenuItem Header="OUTPUT">
+                        <MenuItem Header="NONE" 
+                                  Command="{Binding SetAudioOutputCommand}" 
+                                  CommandParameter="None"
+                                  Icon="{Binding IsAudioOutputNone, Converter={x:Static converters:BoolToIconConverter.Instance}}"/>
+                        <MenuItem Header="SYSTEM DEFAULT" 
+                                  Command="{Binding SetAudioOutputCommand}" 
+                                  CommandParameter="System Default"
+                                  Icon="{Binding IsAudioOutputSystemDefault, Converter={x:Static converters:BoolToIconConverter.Instance}}"/>
+                        <MenuItem Header="ASIO" 
+                                  Name="AsioOutputMenuItem"
+                                  IsEnabled="{Binding HasAsioDrivers}">
+                        </MenuItem>
+                        <Separator/>
+                        <MenuItem Header="NDI Output" 
+                                  Command="{Binding ToggleNDIOutputCommand}"
+                                  IsEnabled="{Binding IsNDIAvailable}"
+                                  Icon="{Binding IsNDIOutputEnabled, Converter={x:Static converters:BoolToIconConverter.Instance}}"/>
+                    </MenuItem>
+                    <MenuItem Header="INPUT">
+                        <MenuItem Header="NONE" 
+                                  Command="{Binding SetAudioInputCommand}" 
+                                  CommandParameter="None"
+                                  Icon="{Binding IsAudioInputNone, Converter={x:Static converters:BoolToIconConverter.Instance}}"/>
+                        <MenuItem Header="SYSTEM DEFAULT" 
+                                  Command="{Binding SetAudioInputCommand}" 
+                                  CommandParameter="System Default"
+                                  Icon="{Binding IsAudioInputSystemDefault, Converter={x:Static converters:BoolToIconConverter.Instance}}"/>
+                        <MenuItem Header="ASIO" 
+                                  Name="AsioInputMenuItem"
+                                  IsEnabled="{Binding HasAsioDrivers}">
+                        </MenuItem>
+                        <MenuItem Header="NDI RECEIVE" 
+                                  Name="NDIReceiveMenuItem"
+                                  IsEnabled="{Binding IsNDIAvailable}"
+                                  Icon="{Binding IsAudioInputNDI, Converter={x:Static converters:BoolToIconConverter.Instance}}">
+                        </MenuItem>
+                    </MenuItem>
+                </MenuItem>
+                <MenuItem Header="CLOCK SOURCE">
+                    <MenuItem Header="SYSTEM CLOCK" 
+                              Command="{Binding SetClockSourceCommand}" 
+                              CommandParameter="System Clock"
+                              Icon="{Binding IsClockSystemClock, Converter={x:Static converters:BoolToIconConverter.Instance}}"/>
+                    <MenuItem Header="NTP (Timezone)"
+                              Icon="{Binding IsClockNtp, Converter={x:Static converters:BoolToIconConverter.Instance}}">
+                        <MenuItem Header="UTC/GMT" 
+                                  Command="{Binding SetNtpTimezoneCommand}" 
+                                  CommandParameter="UTC"/>
+                        <MenuItem Header="Western Europe" 
+                                  Command="{Binding SetNtpTimezoneCommand}" 
+                                  CommandParameter="W. Europe Standard Time"/>
+                        <Separator/>
+                        <MenuItem Header="Eastern Time" 
+                                  Command="{Binding SetNtpTimezoneCommand}" 
+                                  CommandParameter="Eastern Standard Time"/>
+                        <MenuItem Header="Central Time" 
+                                  Command="{Binding SetNtpTimezoneCommand}" 
+                                  CommandParameter="Central Standard Time"/>
+                        <MenuItem Header="Mountain Time" 
+                                  Command="{Binding SetNtpTimezoneCommand}" 
+                                  CommandParameter="Mountain Standard Time"/>
+                        <MenuItem Header="Pacific Time" 
+                                  Command="{Binding SetNtpTimezoneCommand}" 
+                                  CommandParameter="Pacific Standard Time"/>
+                        <MenuItem Header="Alaska Time" 
+                                  Command="{Binding SetNtpTimezoneCommand}" 
+                                  CommandParameter="Alaskan Standard Time"/>
+                        <MenuItem Header="Hawaii-Aleutian" 
+                                  Command="{Binding SetNtpTimezoneCommand}" 
+                                  CommandParameter="Hawaiian Standard Time"/>
+                        <Separator/>
+                        <MenuItem Header="India" 
+                                  Command="{Binding SetNtpTimezoneCommand}" 
+                                  CommandParameter="India Standard Time"/>
+                        <MenuItem Header="China" 
+                                  Command="{Binding SetNtpTimezoneCommand}" 
+                                  CommandParameter="China Standard Time"/>
+                        <MenuItem Header="Japan" 
+                                  Command="{Binding SetNtpTimezoneCommand}" 
+                                  CommandParameter="Tokyo Standard Time"/>
+                        <Separator/>
+                        <MenuItem Header="Australia East" 
+                                  Command="{Binding SetNtpTimezoneCommand}" 
+                                  CommandParameter="AUS Eastern Standard Time"/>
+                        <MenuItem Header="Australia Central" 
+                                  Command="{Binding SetNtpTimezoneCommand}" 
+                                  CommandParameter="Cen. Australia Standard Time"/>
+                    </MenuItem>
+                    <MenuItem Header="FREE RUN" 
+                              Command="{Binding SetClockSourceCommand}" 
+                              CommandParameter="Free Run"
+                              Icon="{Binding IsClockFreeRun, Converter={x:Static converters:BoolToIconConverter.Instance}}"/>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="HELP" Foreground="White">
+                <MenuItem Header="MANUAL" Command="{Binding OpenManualCommand}"/>
+                <MenuItem Header="ABOUT" Command="{Binding OpenAboutCommand}"/>
+                <MenuItem Header="CONTACT" Command="{Binding OpenContactCommand}"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1" Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Top Section: Session Info + Timecode + Buttons -->
+            <Grid Grid.Row="0" Margin="0,0,0,20" ColumnDefinitions="Auto,*,Auto">
+                
+                <!-- Session Info (left side) -->
+                <StackPanel Grid.Column="0" VerticalAlignment="Top" Spacing="20">
+                    <StackPanel>
+                        <TextBlock Text="SESSION NAME" 
+                                   Foreground="White" 
+                                   FontSize="14" 
+                                   Margin="0,0,0,5"/>
+                        <TextBox Text="{Binding SessionName}"
+                                 Width="300" 
+                                 Height="50"
+                                 FontSize="20"
+                                 Background="#3a3a3a"
+                                 Foreground="White"
+                                 BorderBrush="#555555"
+                                 HorizontalAlignment="Left"
+                                 VerticalContentAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Text="DATE" 
+                                   Foreground="White" 
+                                   FontSize="14" 
+                                   Margin="0,0,0,5"/>
+                        <TextBox Text="{Binding Date}"
+                                 Width="300" 
+                                 Height="50"
+                                 FontSize="20"
+                                 Background="#3a3a3a"
+                                 Foreground="White"
+                                 BorderBrush="#555555"
+                                 HorizontalAlignment="Left"
+                                 VerticalContentAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Text="LOCATION" 
+                                   Foreground="White" 
+                                   FontSize="14" 
+                                   Margin="0,0,0,5"/>
+                        <TextBox Text="{Binding Location}"
+                                 Width="300" 
+                                 Height="50"
+                                 FontSize="20"
+                                 Background="#3a3a3a"
+                                 Foreground="White"
+                                 BorderBrush="#555555"
+                                 HorizontalAlignment="Left"
+                                 VerticalContentAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Timecode Display (center) -->
+                <Border Grid.Column="1" 
+                        Background="Black" 
+                        CornerRadius="5"
+                        Padding="20"
+                        Margin="20,0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch">
+                    <Viewbox Stretch="Uniform" StretchDirection="Both">
+                        <TextBlock Text="{Binding CurrentTimecode}"
+                                   FontSize="90"
+                                   FontWeight="Bold"
+                                   Foreground="#00ff00"
+                                   FontFamily="Consolas"
+                                   Padding="20"/>
+                    </Viewbox>
+                </Border>
+
+                <!-- Action Buttons (right side) -->
+                <StackPanel Grid.Column="2" 
+                            Orientation="Vertical" 
+                            VerticalAlignment="Center"
+                            Spacing="20">
+                    <Button Name="GenerateButton"
+                            Classes="dynamicHover"
+                            Command="{Binding ToggleGeneratorCommand}"
+                            Content="{Binding GeneratorButtonText}"
+                            Background="{Binding GeneratorButtonColor}"
+                            Foreground="White"
+                            FontWeight="Bold"
+                            Width="150"
+                            Height="50"
+                            CornerRadius="5"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"/>
+                    <Button Name="TimecodeInButton"
+                            Command="{Binding TimeCodeInCommand}"
+                            Content="TIMECODE IN"
+                            Background="#3b82f6"
+                            Foreground="White"
+                            FontWeight="Bold"
+                            Width="150"
+                            Height="50"
+                            CornerRadius="5"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            Classes.flashing="{Binding IsTimecodeInActive}"/>
+                    <Button Name="TimecodeOutButton"
+                            Command="{Binding TimeCodeOutCommand}"
+                            Content="TIMECODE OUT"
+                            Background="#f97316"
+                            Foreground="White"
+                            FontWeight="Bold"
+                            Width="150"
+                            Height="50"
+                            CornerRadius="5"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"/>
+                    <Button Name="MarkButton"
+                            Command="{Binding TimeCodeMarkCommand}"
+                            Content="MARK"
+                            Background="#a855f7"
+                            Foreground="White"
+                            FontWeight="Bold"
+                            Width="150"
+                            Height="50"
+                            CornerRadius="5"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Data Grid - FULL WIDTH BELOW -->
+            <Border Grid.Row="1"
+                    BorderBrush="#00ff00"
+                    BorderThickness="3"
+                    Background="#2d2d2d"
+                    Margin="0,20,0,20"
+                    Padding="5">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" 
+                              VerticalScrollBarVisibility="Auto"
+                              VerticalAlignment="Stretch"
+                              HorizontalAlignment="Stretch">
+                    <StackPanel>
+                        <!-- Header Row -->
+                        <Border Background="#1e1e1e" BorderBrush="#555555" BorderThickness="1" Padding="5">
+                            <Grid ColumnDefinitions="150,150,150,200,150,250">
+                                <TextBlock Grid.Column="0" Text="TIMECODE IN" FontWeight="Bold" Foreground="White" FontSize="14" Padding="10"/>
+                                <TextBlock Grid.Column="1" Text="TIMECODE OUT" FontWeight="Bold" Foreground="White" FontSize="14" Padding="10"/>
+                                <TextBlock Grid.Column="2" Text="DURATION" FontWeight="Bold" Foreground="White" FontSize="14" Padding="10"/>
+                                <TextBlock Grid.Column="3" Text="CLIP NAME" FontWeight="Bold" Foreground="White" FontSize="14" Padding="10"/>
+                                <TextBlock Grid.Column="4" Text="MARK" FontWeight="Bold" Foreground="White" FontSize="14" Padding="10"/>
+                                <TextBlock Grid.Column="5" Text="NOTES" FontWeight="Bold" Foreground="White" FontSize="14" Padding="10"/>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- Data Rows -->
+                        <ItemsControl ItemsSource="{Binding LogEntries}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:TimecodeLogEntry">
+                                    <Border Background="#3a3a3a" BorderBrush="#555555" BorderThickness="1,0,1,1" Padding="5">
+                                        <Grid ColumnDefinitions="150,150,150,200,150,250">
+                                            <TextBlock Grid.Column="0" 
+                                                       Text="{Binding TimeCodeIn}" 
+                                                       Foreground="White" 
+                                                       FontSize="16" 
+                                                       Padding="10"
+                                                       TextWrapping="Wrap"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" 
+                                                       Text="{Binding TimeCodeOut}" 
+                                                       Foreground="White" 
+                                                       FontSize="16" 
+                                                       Padding="10"
+                                                       TextWrapping="Wrap"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" 
+                                                       Text="{Binding Duration}" 
+                                                       Foreground="White" 
+                                                       FontSize="16" 
+                                                       Padding="10"
+                                                       TextWrapping="Wrap"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="3" 
+                                                     Text="{Binding ClipName}" 
+                                                     Background="Transparent" 
+                                                     Foreground="White" 
+                                                     FontSize="16" 
+                                                     Padding="10" 
+                                                     BorderThickness="0"
+                                                     TextWrapping="Wrap"
+                                                     AcceptsReturn="False"
+                                                     VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="4" 
+                                                       Text="{Binding MarkTimecode}" 
+                                                       Foreground="White" 
+                                                       FontSize="16" 
+                                                       Padding="10"
+                                                       TextWrapping="Wrap"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="5" 
+                                                       Text="{Binding Notes}" 
+                                                       Foreground="White" 
+                                                       FontSize="16" 
+                                                       Padding="10"
+                                                       TextWrapping="Wrap"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2" 
+                Background="#1e1e1e" 
+                Padding="10,5"
+                BorderBrush="#555555"
+                BorderThickness="0,1,0,0">
+            <TextBlock Text="{Binding StatusMessage}" 
+                       Foreground="#00ff00"
+                       FontSize="12"/>
+        </Border>
+    </Grid>
+</Window>
