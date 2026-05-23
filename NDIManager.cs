@@ -63,14 +63,12 @@ namespace StudioLog.Core
         private delegate IntPtr NDIlib_send_create_delegate(ref NDIlib_send_create_t createSettings);
         private delegate void NDIlib_send_destroy_delegate(IntPtr instance);
         private delegate void NDIlib_send_send_audio_v2_delegate(IntPtr instance, ref NDIlib_audio_frame_v2_t audioFrame);
-        private delegate void NDIlib_send_send_video_v2_delegate(IntPtr instance, ref NDIlib_video_frame_v2_t videoFrame);
         private delegate IntPtr NDIlib_find_create_v2_delegate(ref NDIlib_find_create_t createSettings);
         private delegate void NDIlib_find_destroy_delegate(IntPtr instance);
         private delegate bool NDIlib_find_wait_for_sources_delegate(IntPtr instance, uint timeout_ms);
         private delegate IntPtr NDIlib_find_get_current_sources_delegate(IntPtr instance, out uint numSources);
         private delegate IntPtr NDIlib_recv_create_v3_delegate(ref NDIlib_recv_create_v3_t createSettings);
         private delegate void NDIlib_recv_destroy_delegate(IntPtr instance);
-        private delegate void NDIlib_recv_connect_delegate(IntPtr instance, ref NDIlib_source_t source);
         private delegate int NDIlib_recv_capture_v2_delegate(IntPtr instance, IntPtr videoFrame, ref NDIlib_audio_frame_v2_t audioFrame, IntPtr metadata, uint timeout_ms);
         private delegate void NDIlib_recv_free_audio_v2_delegate(IntPtr instance, ref NDIlib_audio_frame_v2_t audioFrame);
         
@@ -80,14 +78,12 @@ namespace StudioLog.Core
         private static NDIlib_send_create_delegate? NDIlib_send_create;
         private static NDIlib_send_destroy_delegate? NDIlib_send_destroy;
         private static NDIlib_send_send_audio_v2_delegate? NDIlib_send_send_audio_v2;
-        private static NDIlib_send_send_video_v2_delegate? NDIlib_send_send_video_v2;
         private static NDIlib_find_create_v2_delegate? NDIlib_find_create_v2;
         private static NDIlib_find_destroy_delegate? NDIlib_find_destroy;
         private static NDIlib_find_wait_for_sources_delegate? NDIlib_find_wait_for_sources;
         private static NDIlib_find_get_current_sources_delegate? NDIlib_find_get_current_sources;
         private static NDIlib_recv_create_v3_delegate? NDIlib_recv_create_v3;
         private static NDIlib_recv_destroy_delegate? NDIlib_recv_destroy;
-        private static NDIlib_recv_connect_delegate? NDIlib_recv_connect;
         private static NDIlib_recv_capture_v2_delegate? NDIlib_recv_capture_v2;
         private static NDIlib_recv_free_audio_v2_delegate? NDIlib_recv_free_audio_v2;
         
@@ -112,23 +108,6 @@ namespace StudioLog.Core
             public long timecode;
             public IntPtr p_data;
             public int channel_stride_in_bytes;
-            public IntPtr p_metadata;
-            public long timestamp;
-        }
-        
-        [StructLayout(LayoutKind.Sequential)]
-        private struct NDIlib_video_frame_v2_t
-        {
-            public int xres;
-            public int yres;
-            public int FourCC; // NDIlib_FourCC_type_UYVY = 0x59565955  
-            public int frame_rate_N;
-            public int frame_rate_D;
-            public float picture_aspect_ratio;
-            public int frame_format_type; // NDIlib_frame_format_type_progressive = 1
-            public long timecode;
-            public IntPtr p_data;
-            public int line_stride_in_bytes;
             public IntPtr p_metadata;
             public long timestamp;
         }
@@ -288,14 +267,12 @@ namespace StudioLog.Core
                         NDIlib_send_create = GetDelegate<NDIlib_send_create_delegate>(_ndiLibHandle, "NDIlib_send_create");
                         NDIlib_send_destroy = GetDelegate<NDIlib_send_destroy_delegate>(_ndiLibHandle, "NDIlib_send_destroy");
                         NDIlib_send_send_audio_v2 = GetDelegate<NDIlib_send_send_audio_v2_delegate>(_ndiLibHandle, "NDIlib_send_send_audio_v2");
-                        NDIlib_send_send_video_v2 = GetDelegate<NDIlib_send_send_video_v2_delegate>(_ndiLibHandle, "NDIlib_send_send_video_v2");
                         NDIlib_find_create_v2 = GetDelegate<NDIlib_find_create_v2_delegate>(_ndiLibHandle, "NDIlib_find_create_v2");
                         NDIlib_find_destroy = GetDelegate<NDIlib_find_destroy_delegate>(_ndiLibHandle, "NDIlib_find_destroy");
                         NDIlib_find_wait_for_sources = GetDelegate<NDIlib_find_wait_for_sources_delegate>(_ndiLibHandle, "NDIlib_find_wait_for_sources");
                         NDIlib_find_get_current_sources = GetDelegate<NDIlib_find_get_current_sources_delegate>(_ndiLibHandle, "NDIlib_find_get_current_sources");
                         NDIlib_recv_create_v3 = GetDelegate<NDIlib_recv_create_v3_delegate>(_ndiLibHandle, "NDIlib_recv_create_v3");
                         NDIlib_recv_destroy = GetDelegate<NDIlib_recv_destroy_delegate>(_ndiLibHandle, "NDIlib_recv_destroy");
-                        NDIlib_recv_connect = GetDelegate<NDIlib_recv_connect_delegate>(_ndiLibHandle, "NDIlib_recv_connect");
                         NDIlib_recv_capture_v2 = GetDelegate<NDIlib_recv_capture_v2_delegate>(_ndiLibHandle, "NDIlib_recv_capture_v2");
                         NDIlib_recv_free_audio_v2 = GetDelegate<NDIlib_recv_free_audio_v2_delegate>(_ndiLibHandle, "NDIlib_recv_free_audio_v2");
                         
@@ -750,14 +727,12 @@ namespace StudioLog.Core
                     NDIlib_send_create = null;
                     NDIlib_send_destroy = null;
                     NDIlib_send_send_audio_v2 = null;
-                    NDIlib_send_send_video_v2 = null;
                     NDIlib_find_create_v2 = null;
                     NDIlib_find_destroy = null;
                     NDIlib_find_wait_for_sources = null;
                     NDIlib_find_get_current_sources = null;
                     NDIlib_recv_create_v3 = null;
                     NDIlib_recv_destroy = null;
-                    NDIlib_recv_connect = null;
                     NDIlib_recv_capture_v2 = null;
                     NDIlib_recv_free_audio_v2 = null;
                     
