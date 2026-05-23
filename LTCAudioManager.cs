@@ -34,6 +34,15 @@ namespace StudioLog.Core
         {
             Stop();
 
+            // Dispose old devices so a stale _waveOut can't survive into Start()
+            // (Stop() halts playback but does not null the references)
+            _waveOut?.Dispose();
+            _waveOut = null;
+            _waveIn?.Dispose();
+            _waveIn = null;
+            _ltcGenerator = null;
+            _inputBuffer = null;
+
             _audioOutput = audioOutput;
             _audioInput = audioInput;
             _isPassthroughMode = audioInput != "None";
