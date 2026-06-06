@@ -284,15 +284,17 @@ namespace StudioLog.Core
             if (_connection == null) return;
 
             var sql = @"
-                UPDATE LogEntries 
-                SET TimeCodeOut = @TimeCodeOut, 
-                    Duration = @Duration, 
-                    ClipName = @ClipName, 
+                UPDATE LogEntries
+                SET TimeCodeIn = @TimeCodeIn,
+                    TimeCodeOut = @TimeCodeOut,
+                    Duration = @Duration,
+                    ClipName = @ClipName,
                     Notes = @Notes,
                     MarkTimecode = @MarkTimecode
                 WHERE Id = @Id";
 
             using var command = new SqliteCommand(sql, _connection);
+            command.Parameters.AddWithValue("@TimeCodeIn", entry.TimeCodeIn ?? "");
             command.Parameters.AddWithValue("@TimeCodeOut", entry.TimeCodeOut ?? "");
             command.Parameters.AddWithValue("@Duration", entry.Duration ?? "");
             command.Parameters.AddWithValue("@ClipName", entry.ClipName ?? "");
