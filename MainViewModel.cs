@@ -1573,9 +1573,12 @@ namespace StudioLog.ViewModels
             if (sender is not TimecodeLogEntry entry) return;
             if (entry.Id <= 0) return;
             if (e.PropertyName != nameof(TimecodeLogEntry.TimeCodeIn) &&
-                e.PropertyName != nameof(TimecodeLogEntry.TimeCodeOut)) return;
+                e.PropertyName != nameof(TimecodeLogEntry.TimeCodeOut) &&
+                e.PropertyName != nameof(TimecodeLogEntry.Notes)) return;
 
-            if (!string.IsNullOrEmpty(entry.TimeCodeIn) && !string.IsNullOrEmpty(entry.TimeCodeOut))
+            if ((e.PropertyName == nameof(TimecodeLogEntry.TimeCodeIn) ||
+                 e.PropertyName == nameof(TimecodeLogEntry.TimeCodeOut)) &&
+                !string.IsNullOrEmpty(entry.TimeCodeIn) && !string.IsNullOrEmpty(entry.TimeCodeOut))
             {
                 entry.Duration = CalculateDuration(entry.TimeCodeIn, entry.TimeCodeOut);
             }
