@@ -1579,6 +1579,42 @@ namespace StudioLog.ViewModels
             }
         }
 
+        private void SubscribeToEntry(TimecodeLogEntry entry)
+        {
+            entry.PropertyChanged += OnEntryPropertyChanged;
+        }
+
+        private void UnsubscribeAllEntries()
+        {
+            foreach (var entry in LogEntries)
+                entry.PropertyChanged -= OnEntryPropertyChanged;
+        }
+
+        private async void OnEntryPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (sender is not TimecodeLogEntry entry) return;
+            if (e.PropertyName != nameof(TimecodeLogEntry.TimeCodeIn) &&
+                e.PropertyName != nameof(TimecodeLogEntry.TimeCodeOut)) return;
+
+            if (!string.IsNullOrEmpty(entry.TimeCodeIn) && !string.IsNullOrEmpty(entry.TimeCodeOut))
+            {
+                entry.Duration = CalculateDuration(entry.TimeCodeIn, entry.TimeCodeOut);
+            }
+
+            try
+            {
+                await _database.UpdateEntry(entry);
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    StatusMessage = $"Entry updated: TC In {entry.TimeCodeIn}  TC Out {entry.TimeCodeOut}";
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Entry] Auto-save error: {ex.Message}");
+            }
+        }
+
         public void Dispose()
         {
             if (_disposed) return;
