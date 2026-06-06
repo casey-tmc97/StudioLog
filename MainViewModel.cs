@@ -1612,12 +1612,18 @@ namespace StudioLog.ViewModels
             catch (Exception ex)
             {
                 Console.WriteLine($"[Entry] Auto-save error: {ex.Message}");
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    StatusMessage = $"Auto-save failed: {ex.Message}";
+                });
             }
         }
 
         public void Dispose()
         {
             if (_disposed) return;
+
+            UnsubscribeAllEntries();
 
             // Unsubscribe from NDI events
             if (_audioManager?.NDI != null)
