@@ -881,9 +881,25 @@ namespace StudioLog.ViewModels
                     return;
                 }
 
+                string timecode = CurrentTimecode;
+
+                if (_currentEntry != null)
+                {
+                    _currentEntry.TimeCodeOut = timecode;
+                    _currentEntry.Duration = CalculateDuration(_currentEntry.TimeCodeIn, timecode);
+                    await _database.UpdateEntry(_currentEntry);
+
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        IsTimecodeInActive = false;
+                    });
+
+                    _currentEntry = null;
+                }
+
                 _currentEntry = new TimecodeLogEntry
                 {
-                    TimeCodeIn = CurrentTimecode,
+                    TimeCodeIn = timecode,
                     SessionId = _currentSession.Id
                 };
 
@@ -894,9 +910,9 @@ namespace StudioLog.ViewModels
                 {
                     LogEntries.Add(_currentEntry);
                     SubscribeToEntry(_currentEntry);
-                    IsTimecodeInActive = true; // Start flashing
+                    IsTimecodeInActive = true;
                     _hasUnsavedChanges = true;
-                    StatusMessage = $"TC IN: {CurrentTimecode}";
+                    StatusMessage = $"TC IN: {timecode}";
                 });
             }
             catch (Exception ex)
