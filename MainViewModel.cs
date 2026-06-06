@@ -1599,6 +1599,7 @@ namespace StudioLog.ViewModels
         private async void OnEntryPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (sender is not TimecodeLogEntry entry) return;
+            if (entry.Id <= 0) return;
             if (e.PropertyName != nameof(TimecodeLogEntry.TimeCodeIn) &&
                 e.PropertyName != nameof(TimecodeLogEntry.TimeCodeOut)) return;
 
