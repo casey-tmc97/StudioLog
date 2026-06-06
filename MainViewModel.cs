@@ -971,58 +971,15 @@ namespace StudioLog.ViewModels
                     });
                     return;
                 }
-                
-                // Capture timecode immediately when Mark button is pressed
+
                 string currentTimecode = CurrentTimecode;
 
-                // Open the Mark Notes window
-                string notes = string.Empty;
-                bool okClicked = false;
-
-                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
-                {
-                    var mainWindow = Avalonia.Application.Current?.ApplicationLifetime is 
-                        Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                        ? desktop.MainWindow
-                        : null;
-
-                    var notesWindow = new MarkNotesWindow();
-                    await notesWindow.ShowDialog(mainWindow!);
-                    
-                    notes = notesWindow.Notes;
-                    okClicked = notesWindow.WasOkClicked;
-                });
-
-                // Only proceed if OK was clicked
-                if (!okClicked)
-                {
-                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-                    {
-                        StatusMessage = "Mark cancelled";
-                    });
-                    return;
-                }
-
-                // If there's an active entry (TC IN pressed but no TC OUT), add mark to it
                 if (_currentEntry != null)
                 {
-                    // Add mark timecode to existing marks (comma-separated)
                     if (string.IsNullOrWhiteSpace(_currentEntry.MarkTimecode))
-                    {
                         _currentEntry.MarkTimecode = currentTimecode;
-                    }
                     else
-                    {
                         _currentEntry.MarkTimecode += ", " + currentTimecode;
-                    }
-
-                    // Add notes (comma-separated if there are existing notes)
-                    if (!string.IsNullOrWhiteSpace(notes))
-                    {
-                        _currentEntry.Notes = string.IsNullOrWhiteSpace(_currentEntry.Notes) 
-                            ? notes 
-                            : _currentEntry.Notes + ", " + notes;
-                    }
 
                     await _database.UpdateEntry(_currentEntry);
 
@@ -1033,12 +990,11 @@ namespace StudioLog.ViewModels
                 }
                 else
                 {
-                    // No active entry - create a new MARK-only entry
                     var markEntry = new TimecodeLogEntry
                     {
                         TimeCodeIn = currentTimecode,
                         MarkTimecode = currentTimecode,
-                        Notes = string.IsNullOrWhiteSpace(notes) ? "MARK" : notes,
+                        Notes = "MARK",
                         SessionId = _currentSession.Id
                     };
 
