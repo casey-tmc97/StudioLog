@@ -309,7 +309,8 @@ namespace StudioLog.ViewModels
                     SessionName = string.Empty;
                     Date = DateTime.Now.ToString("yyyy-MM-dd");
                     Location = string.Empty;
-                    
+
+                    UnsubscribeAllEntries();
                     LogEntries.Clear();
                     _hasUnsavedChanges = false;
                     
@@ -404,6 +405,7 @@ namespace StudioLog.ViewModels
                     SessionName = string.Empty;
                     Date = DateTime.Now.ToString("yyyy-MM-dd");
                     Location = string.Empty;
+                    UnsubscribeAllEntries();
                     LogEntries.Clear();
                     
                     _hasUnsavedChanges = false;
@@ -597,10 +599,12 @@ namespace StudioLog.ViewModels
                     Date = sessionData.Date;
                     Location = sessionData.Location;
                     
+                    UnsubscribeAllEntries();
                     LogEntries.Clear();
                     foreach (var entry in sessionData.Entries)
                     {
                         LogEntries.Add(entry);
+                        SubscribeToEntry(entry);
                     }
                     
                     _hasUnsavedChanges = false;
@@ -889,6 +893,7 @@ namespace StudioLog.ViewModels
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     LogEntries.Add(_currentEntry);
+                    SubscribeToEntry(_currentEntry);
                     IsTimecodeInActive = true; // Start flashing
                     _hasUnsavedChanges = true;
                     StatusMessage = $"TC IN: {CurrentTimecode}";
@@ -1027,6 +1032,7 @@ namespace StudioLog.ViewModels
                     await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     {
                         LogEntries.Add(markEntry);
+                        SubscribeToEntry(markEntry);
                         _hasUnsavedChanges = true;
                         StatusMessage = $"MARK created: {currentTimecode}";
                     });
