@@ -431,13 +431,16 @@
                                                        Padding="10"
                                                        TextWrapping="Wrap"
                                                        VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="5" 
-                                                       Text="{Binding Notes}" 
-                                                       Foreground="White" 
-                                                       FontSize="16" 
-                                                       Padding="10"
-                                                       TextWrapping="Wrap"
-                                                       VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="5"
+                                                     Text="{Binding Notes}"
+                                                     Background="Transparent"
+                                                     Foreground="White"
+                                                     FontSize="16"
+                                                     Padding="10"
+                                                     BorderThickness="0"
+                                                     TextWrapping="Wrap"
+                                                     AcceptsReturn="False"
+                                                     VerticalAlignment="Center"/>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
