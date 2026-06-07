@@ -414,7 +414,9 @@ namespace StudioLog.ViewModels
                     Location = string.Empty;
                     UnsubscribeAllEntries();
                     LogEntries.Clear();
-                    
+                    _undoStack.Clear();
+                    OnPropertyChanged(nameof(CanUndo));
+
                     _hasUnsavedChanges = false;
                     StatusMessage = "New blank session created - Enter Artist Name and start logging";
                 });
@@ -608,6 +610,8 @@ namespace StudioLog.ViewModels
                     
                     UnsubscribeAllEntries();
                     LogEntries.Clear();
+                    _undoStack.Clear();
+                    OnPropertyChanged(nameof(CanUndo));
                     foreach (var entry in sessionData.Entries)
                     {
                         LogEntries.Add(entry);
@@ -1091,7 +1095,7 @@ namespace StudioLog.ViewModels
                 if (_undoStack.Count == 0) return;
                 if (_currentSession == null) return;
 
-                var toRestore = _undoStack.Pop();
+                var toRestore = _undoStack.Peek();
 
                 foreach (var entry in toRestore)
                     await _database.RestoreEntry(entry);
@@ -1101,6 +1105,7 @@ namespace StudioLog.ViewModels
 
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                 {
+                    _undoStack.Pop();
                     UnsubscribeAllEntries();
                     LogEntries.Clear();
                     foreach (var e in entries)
