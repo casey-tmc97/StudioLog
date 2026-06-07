@@ -443,14 +443,26 @@ namespace StudioLog.ViewModels
                     return;
                 }
 
-                // Update session info in database first
                 _currentSession.SessionName = SessionName;
                 _currentSession.Date = Date;
                 _currentSession.Location = Location;
                 await _database.UpdateSessionInfo(_currentSession);
 
-                // Save to file
-                await SaveCurrentSession();
+                string safeSessionName = string.Join("_", SessionName.Split(Path.GetInvalidFileNameChars()));
+                string safeDate = Date.Replace("/", "-").Replace("\\", "-");
+                string defaultFilename = $"{safeSessionName}_{safeDate}.tcsession";
+
+                string? filepath = await ShowSaveFileDialog(defaultFilename, "Timecode Sessions", "tcsession", "Save Session");
+                if (string.IsNullOrEmpty(filepath)) return;
+
+                var entries = LogEntries.ToList();
+                await _sessionManager.SaveSessionToPath(_currentSession, entries, filepath);
+
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    _hasUnsavedChanges = false;
+                    StatusMessage = $"Session saved: {Path.GetFileName(filepath)}";
+                });
             }
             catch (Exception ex)
             {
@@ -783,27 +795,27 @@ namespace StudioLog.ViewModels
             }
         }
 
-        private async Task<string?> ShowSaveFileDialog(string defaultFilename, string filterName, string extension)
+        private async Task<string?> ShowSaveFileDialog(string defaultFilename, string filterName, string extension, string? title = null)
         {
             try
             {
                 var tcs = new TaskCompletionSource<string?>();
-                
+
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    var mainWindow = Avalonia.Application.Current?.ApplicationLifetime is 
+                    var mainWindow = Avalonia.Application.Current?.ApplicationLifetime is
                         Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
                         ? desktop.MainWindow
                         : null;
-                    
+
                     if (mainWindow == null)
                     {
                         tcs.SetResult(null);
                         return;
                     }
-                    
+
                     var storageProvider = mainWindow.StorageProvider;
-                    
+
                     // Try to get Documents folder as starting location
                     IStorageFolder? startFolder = null;
                     try
@@ -812,10 +824,10 @@ namespace StudioLog.ViewModels
                             Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
                     }
                     catch { }
-                    
+
                     var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
                     {
-                        Title = $"Export {filterName}",
+                        Title = title ?? $"Export {filterName}",
                         SuggestedFileName = defaultFilename,
                         SuggestedStartLocation = startFolder,
                         FileTypeChoices = new[]
@@ -823,10 +835,10 @@ namespace StudioLog.ViewModels
                             new FilePickerFileType(filterName) { Patterns = new[] { $"*.{extension}" } }
                         }
                     });
-                    
+
                     tcs.SetResult(file?.TryGetLocalPath());
                 });
-                
+
                 return await tcs.Task;
             }
             catch

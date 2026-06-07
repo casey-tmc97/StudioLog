@@ -83,6 +83,34 @@ namespace StudioLog.Core
             }
         }
 
+        public async Task<string> SaveSessionToPath(Session session, List<TimecodeLogEntry> entries, string filepath)
+        {
+            try
+            {
+                var sessionData = new SessionFileData
+                {
+                    SessionId = session.Id,
+                    SessionName = session.SessionName,
+                    Date = session.Date,
+                    Location = session.Location,
+                    CreatedAt = session.CreatedAt,
+                    Entries = entries
+                };
+
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string json = JsonSerializer.Serialize(sessionData, options);
+                await File.WriteAllTextAsync(filepath, json);
+
+                Console.WriteLine($"[SessionManager] Session saved to: {filepath}");
+                return filepath;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SessionManager] Error saving session: {ex.Message}");
+                throw;
+            }
+        }
+
         public async Task<SessionFileData?> LoadSessionFromFile(string filepath)
         {
             try
