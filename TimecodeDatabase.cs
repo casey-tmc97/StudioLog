@@ -408,7 +408,7 @@ namespace StudioLog.Core
         {
             if (_connection == null) return;
             var sql = @"
-        INSERT OR REPLACE INTO LogEntries
+        INSERT INTO LogEntries
             (Id, SessionId, TimeCodeIn, TimeCodeOut, Duration, ClipName, Notes, MarkTimecode, CreatedAt, ParentEntryId)
         VALUES
             (@Id, @SessionId, @TimeCodeIn, @TimeCodeOut, @Duration, @ClipName, @Notes, @MarkTimecode, @CreatedAt, @ParentEntryId)";
