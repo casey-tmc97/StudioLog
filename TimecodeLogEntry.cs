@@ -57,7 +57,7 @@ namespace StudioLog.Models
         public int? ParentEntryId
         {
             get => _parentEntryId;
-            set { _parentEntryId = value; OnPropertyChanged(); }
+            set { _parentEntryId = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsMarkSubRow)); }
         }
 
         public bool IsMarkSubRow => ParentEntryId.HasValue;
