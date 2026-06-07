@@ -1113,6 +1113,9 @@ namespace StudioLog.ViewModels
                         LogEntries.Add(e);
                         SubscribeToEntry(e);
                     }
+                    // Re-anchor _currentEntry to the new object instance from the DB reload
+                    if (_currentEntry != null)
+                        _currentEntry = LogEntries.FirstOrDefault(e => e.Id == _currentEntry.Id);
                     OnPropertyChanged(nameof(CanUndo));
                     _hasUnsavedChanges = true;
                     StatusMessage = $"Undo: restored {toRestore.Count} row(s).";
