@@ -101,8 +101,8 @@ namespace StudioLog.Core
             // Migration: Add ParentEntryId column if it doesn't exist
             try
             {
-                var checkParentCol = "SELECT COUNT(*) FROM pragma_table_info('LogEntries') WHERE name='ParentEntryId'";
-                using (var command = new SqliteCommand(checkParentCol, _connection))
+                var checkColumn = "SELECT COUNT(*) FROM pragma_table_info('LogEntries') WHERE name='ParentEntryId'";
+                using (var command = new SqliteCommand(checkColumn, _connection))
                 {
                     var columnExists = Convert.ToInt32(command.ExecuteScalar()) > 0;
                     if (!columnExists)
@@ -313,7 +313,8 @@ namespace StudioLog.Core
                     Duration = @Duration,
                     ClipName = @ClipName,
                     Notes = @Notes,
-                    MarkTimecode = @MarkTimecode
+                    MarkTimecode = @MarkTimecode,
+                    ParentEntryId = @ParentEntryId
                 WHERE Id = @Id";
 
             using var command = new SqliteCommand(sql, _connection);
@@ -323,6 +324,7 @@ namespace StudioLog.Core
             command.Parameters.AddWithValue("@ClipName", entry.ClipName ?? "");
             command.Parameters.AddWithValue("@Notes", entry.Notes ?? "");
             command.Parameters.AddWithValue("@MarkTimecode", entry.MarkTimecode ?? "");
+            command.Parameters.AddWithValue("@ParentEntryId", (object?)entry.ParentEntryId ?? DBNull.Value);
             command.Parameters.AddWithValue("@Id", entry.Id);
 
             await command.ExecuteNonQueryAsync();
@@ -333,6 +335,8 @@ namespace StudioLog.Core
             if (_connection == null) return new List<TimecodeLogEntry>();
 
             var entries = new List<TimecodeLogEntry>();
+            // Order: COALESCE groups each child (ParentEntryId=parent's Id) with its parent (COALESCE=own Id).
+            // Second term puts parent (0) before children (1) within each group. Id breaks ties by insertion order.
             var sql = @"
                 SELECT * FROM LogEntries
                 WHERE SessionId = @SessionId
