@@ -976,16 +976,23 @@ namespace StudioLog.ViewModels
 
                 if (_currentEntry != null)
                 {
-                    if (string.IsNullOrWhiteSpace(_currentEntry.MarkTimecode))
-                        _currentEntry.MarkTimecode = currentTimecode;
-                    else
-                        _currentEntry.MarkTimecode += ", " + currentTimecode;
+                    var markEntry = new TimecodeLogEntry
+                    {
+                        ParentEntryId = _currentEntry.Id,
+                        MarkTimecode = currentTimecode,
+                        Notes = "",
+                        SessionId = _currentSession.Id
+                    };
 
-                    await _database.UpdateEntry(_currentEntry);
+                    int entryId = await _database.AddEntry(markEntry, _currentSession.Id);
+                    markEntry.Id = entryId;
 
                     await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     {
-                        StatusMessage = $"MARK added to current entry: {currentTimecode}";
+                        LogEntries.Add(markEntry);
+                        SubscribeToEntry(markEntry);
+                        _hasUnsavedChanges = true;
+                        StatusMessage = $"MARK added: {currentTimecode}";
                     });
                 }
                 else
