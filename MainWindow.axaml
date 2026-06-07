@@ -365,8 +365,6 @@
 
             <!-- Data Grid - FULL WIDTH BELOW -->
             <Border Grid.Row="1"
-                    BorderBrush="#00ff00"
-                    BorderThickness="3"
                     Background="#2d2d2d"
                     Margin="0,20,0,20"
                     Padding="5">
