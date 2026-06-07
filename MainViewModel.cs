@@ -27,6 +27,7 @@ namespace StudioLog.ViewModels
         private TimecodeLogEntry? _currentEntry;
         private bool _disposed;
         private bool _hasUnsavedChanges = false;
+        private readonly Stack<List<TimecodeLogEntry>> _undoStack = new();
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -171,6 +172,8 @@ namespace StudioLog.ViewModels
 
         public ObservableCollection<TimecodeLogEntry> LogEntries { get; }
 
+        public bool CanUndo => _undoStack.Count > 0;
+
         public ObservableCollection<string> AvailableAsioDrivers { get; } = new ObservableCollection<string>();
         
         private bool _hasAsioDrivers;
@@ -216,6 +219,8 @@ namespace StudioLog.ViewModels
         public ICommand OpenAboutCommand { get; }
         public ICommand OpenContactCommand { get; }
         public ICommand ExitCommand { get; }
+        public ICommand DeleteEntryCommand { get; }
+        public ICommand UndoDeleteCommand { get; }
 
         public MainViewModel()
         {
@@ -267,6 +272,8 @@ namespace StudioLog.ViewModels
             OpenAboutCommand = ReactiveCommand.Create(OpenAbout);
             OpenContactCommand = ReactiveCommand.Create(OpenContact);
             ExitCommand = ReactiveCommand.Create(Exit);
+            DeleteEntryCommand = ReactiveCommand.Create<TimecodeLogEntry>(DeleteEntry);
+            UndoDeleteCommand = ReactiveCommand.Create(UndoDelete);
 
             // Create timer but don't start it - will start when user clicks Generate
             _displayTimer = new System.Threading.Timer(UpdateDisplay, null, System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
@@ -1022,6 +1029,95 @@ namespace StudioLog.ViewModels
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     StatusMessage = $"Error: {ex.Message}";
+                });
+            }
+        }
+
+        private async void DeleteEntry(TimecodeLogEntry entry)
+        {
+            try
+            {
+                if (_currentSession == null) return;
+
+                // Collect everything being deleted: children first, then the entry itself
+                var toDelete = new List<TimecodeLogEntry>();
+                if (!entry.IsMarkSubRow)
+                {
+                    var children = LogEntries.Where(e => e.ParentEntryId == entry.Id).ToList();
+                    toDelete.AddRange(children);
+                }
+                toDelete.Add(entry);
+
+                // Delete from DB (children before parent)
+                if (!entry.IsMarkSubRow)
+                    await _database.DeleteChildEntries(entry.Id);
+                await _database.DeleteEntry(entry.Id);
+
+                // Remove from UI
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    foreach (var e in toDelete)
+                    {
+                        e.PropertyChanged -= OnEntryPropertyChanged;
+                        LogEntries.Remove(e);
+                    }
+
+                    // Clear _currentEntry if it was deleted
+                    if (_currentEntry != null && toDelete.Contains(_currentEntry))
+                    {
+                        _currentEntry = null;
+                        IsTimecodeInActive = false;
+                    }
+
+                    _undoStack.Push(toDelete);
+                    OnPropertyChanged(nameof(CanUndo));
+                    _hasUnsavedChanges = true;
+                    StatusMessage = $"Deleted {toDelete.Count} row(s). Use File > Undo Delete to restore.";
+                });
+            }
+            catch (Exception ex)
+            {
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    StatusMessage = $"Delete error: {ex.Message}";
+                });
+            }
+        }
+
+        private async void UndoDelete()
+        {
+            try
+            {
+                if (_undoStack.Count == 0) return;
+                if (_currentSession == null) return;
+
+                var toRestore = _undoStack.Pop();
+
+                foreach (var entry in toRestore)
+                    await _database.RestoreEntry(entry);
+
+                // Reload entries from DB so ordering is correct
+                var entries = await _database.GetSessionEntries(_currentSession.Id);
+
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    UnsubscribeAllEntries();
+                    LogEntries.Clear();
+                    foreach (var e in entries)
+                    {
+                        LogEntries.Add(e);
+                        SubscribeToEntry(e);
+                    }
+                    OnPropertyChanged(nameof(CanUndo));
+                    _hasUnsavedChanges = true;
+                    StatusMessage = $"Undo: restored {toRestore.Count} row(s).";
+                });
+            }
+            catch (Exception ex)
+            {
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    StatusMessage = $"Undo error: {ex.Message}";
                 });
             }
         }
