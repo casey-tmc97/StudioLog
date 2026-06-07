@@ -143,6 +143,17 @@ namespace StudioLog
                     e.Handled = true;
                 }
             }
+            else if (e.Key == Key.E && e.KeyModifiers == KeyModifiers.Control)
+            {
+                var fileMenuItem = this.FindControl<MenuItem>("FileMenuItem");
+                var exportMenuItem = this.FindControl<MenuItem>("ExportMenuItem");
+                if (fileMenuItem != null && exportMenuItem != null)
+                {
+                    fileMenuItem.IsSubMenuOpen = true;
+                    exportMenuItem.IsSubMenuOpen = true;
+                }
+                e.Handled = true;
+            }
         }
 
         protected override void OnClosed(EventArgs e)
