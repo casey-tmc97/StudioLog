@@ -93,6 +93,8 @@
                 <MenuItem Header="Save Session" Command="{Binding SaveSessionCommand}"/>
                 <MenuItem Header="Open Session" Command="{Binding OpenSessionCommand}"/>
                 <Separator/>
+                <MenuItem Header="Undo Delete" Command="{Binding UndoDeleteCommand}" IsEnabled="{Binding CanUndo}"/>
+                <Separator/>
                 <MenuItem Header="Export">
                     <MenuItem Header="Export to PDF" Command="{Binding ExportPdfCommand}"/>
                     <MenuItem Header="Export to CSV" Command="{Binding ExportCsvCommand}"/>
@@ -375,7 +377,7 @@
                     <StackPanel>
                         <!-- Header Row -->
                         <Border Background="#1e1e1e" BorderBrush="#555555" BorderThickness="1" Padding="5">
-                            <Grid ColumnDefinitions="150,150,150,200,150,250">
+                            <Grid ColumnDefinitions="150,150,150,200,150,250,40">
                                 <TextBlock Grid.Column="0" Text="TIMECODE IN" FontWeight="Bold" Foreground="White" FontSize="14" Padding="10"/>
                                 <TextBlock Grid.Column="1" Text="TIMECODE OUT" FontWeight="Bold" Foreground="White" FontSize="14" Padding="10"/>
                                 <TextBlock Grid.Column="2" Text="DURATION" FontWeight="Bold" Foreground="White" FontSize="14" Padding="10"/>
@@ -390,7 +392,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="models:TimecodeLogEntry">
                                     <Border Background="{Binding RowBackground}" BorderBrush="#555555" BorderThickness="1,0,1,1" Padding="5">
-                                        <Grid ColumnDefinitions="150,150,150,200,150,250">
+                                        <Grid ColumnDefinitions="150,150,150,200,150,250,40">
                                             <!-- Col 0: TC IN (hidden for sub-rows) -->
                                             <TextBox Grid.Column="0"
                                                      Text="{Binding TimeCodeIn}"
@@ -459,6 +461,19 @@
                                                      TextWrapping="Wrap"
                                                      AcceptsReturn="False"
                                                      VerticalAlignment="Center"/>
+                                            <!-- Col 6: Delete button -->
+                                            <Button Grid.Column="6"
+                                                    Command="{ReflectionBinding $parent[ItemsControl].DataContext.DeleteEntryCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    Content="✕"
+                                                    Background="Transparent"
+                                                    Foreground="#cc4444"
+                                                    BorderThickness="0"
+                                                    FontSize="14"
+                                                    Padding="4"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Cursor="Hand"/>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
