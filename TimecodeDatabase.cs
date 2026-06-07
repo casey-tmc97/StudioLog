@@ -386,6 +386,46 @@ namespace StudioLog.Core
             await command.ExecuteNonQueryAsync();
         }
 
+        public async Task DeleteEntry(int id)
+        {
+            if (_connection == null) return;
+            var sql = "DELETE FROM LogEntries WHERE Id = @Id";
+            using var command = new SqliteCommand(sql, _connection);
+            command.Parameters.AddWithValue("@Id", id);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task DeleteChildEntries(int parentId)
+        {
+            if (_connection == null) return;
+            var sql = "DELETE FROM LogEntries WHERE ParentEntryId = @ParentEntryId";
+            using var command = new SqliteCommand(sql, _connection);
+            command.Parameters.AddWithValue("@ParentEntryId", parentId);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task RestoreEntry(TimecodeLogEntry entry)
+        {
+            if (_connection == null) return;
+            var sql = @"
+        INSERT OR REPLACE INTO LogEntries
+            (Id, SessionId, TimeCodeIn, TimeCodeOut, Duration, ClipName, Notes, MarkTimecode, CreatedAt, ParentEntryId)
+        VALUES
+            (@Id, @SessionId, @TimeCodeIn, @TimeCodeOut, @Duration, @ClipName, @Notes, @MarkTimecode, @CreatedAt, @ParentEntryId)";
+            using var command = new SqliteCommand(sql, _connection);
+            command.Parameters.AddWithValue("@Id", entry.Id);
+            command.Parameters.AddWithValue("@SessionId", entry.SessionId);
+            command.Parameters.AddWithValue("@TimeCodeIn", entry.TimeCodeIn);
+            command.Parameters.AddWithValue("@TimeCodeOut", entry.TimeCodeOut ?? "");
+            command.Parameters.AddWithValue("@Duration", entry.Duration ?? "");
+            command.Parameters.AddWithValue("@ClipName", entry.ClipName ?? "");
+            command.Parameters.AddWithValue("@Notes", entry.Notes ?? "");
+            command.Parameters.AddWithValue("@MarkTimecode", entry.MarkTimecode ?? "");
+            command.Parameters.AddWithValue("@CreatedAt", entry.CreatedAt);
+            command.Parameters.AddWithValue("@ParentEntryId", (object?)entry.ParentEntryId ?? DBNull.Value);
+            await command.ExecuteNonQueryAsync();
+        }
+
         public void Dispose()
         {
             if (_disposed) return;
