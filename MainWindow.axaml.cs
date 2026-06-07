@@ -176,6 +176,26 @@ namespace StudioLog
                         _viewModel?.ExitCommand.Execute(null);
                         e.Handled = true;
                         break;
+                    case Key.N:
+                        _viewModel?.NewSessionCommand.Execute(null);
+                        e.Handled = true;
+                        break;
+                    case Key.G:
+                        _viewModel?.ToggleGeneratorCommand.Execute(null);
+                        e.Handled = true;
+                        break;
+                    case Key.I:
+                        _viewModel?.TimeCodeInCommand.Execute(null);
+                        e.Handled = true;
+                        break;
+                    case Key.K:
+                        _viewModel?.TimeCodeOutCommand.Execute(null);
+                        e.Handled = true;
+                        break;
+                    case Key.M:
+                        _viewModel?.TimeCodeMarkCommand.Execute(null);
+                        e.Handled = true;
+                        break;
                 }
             }
         }

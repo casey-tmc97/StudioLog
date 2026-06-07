@@ -89,7 +89,7 @@
         <!-- Menu Bar -->
         <Menu Grid.Row="0" Background="#1e1e1e">
             <MenuItem Name="FileMenuItem" Header="FILE" Foreground="White">
-                <MenuItem Header="New Session" Command="{Binding NewSessionCommand}"/>
+                <MenuItem Header="New Session         Ctrl+N" Command="{Binding NewSessionCommand}"/>
                 <MenuItem Header="Save Session        Ctrl+S" Command="{Binding SaveSessionCommand}"/>
                 <MenuItem Header="Open Session        Ctrl+O" Command="{Binding OpenSessionCommand}"/>
                 <Separator/>
