@@ -375,12 +375,13 @@
                     <StackPanel>
                         <!-- Header Row -->
                         <Border Background="#1e1e1e" BorderBrush="#555555" BorderThickness="1" Padding="5">
-                            <Grid ColumnDefinitions="150,150,150,200,300">
+                            <Grid ColumnDefinitions="150,150,150,200,150,250">
                                 <TextBlock Grid.Column="0" Text="TIMECODE IN" FontWeight="Bold" Foreground="White" FontSize="14" Padding="10"/>
                                 <TextBlock Grid.Column="1" Text="TIMECODE OUT" FontWeight="Bold" Foreground="White" FontSize="14" Padding="10"/>
                                 <TextBlock Grid.Column="2" Text="DURATION" FontWeight="Bold" Foreground="White" FontSize="14" Padding="10"/>
                                 <TextBlock Grid.Column="3" Text="CLIP NAME" FontWeight="Bold" Foreground="White" FontSize="14" Padding="10"/>
-                                <TextBlock Grid.Column="4" Text="NOTES" FontWeight="Bold" Foreground="White" FontSize="14" Padding="10"/>
+                                <TextBlock Grid.Column="4" Text="MARK" FontWeight="Bold" Foreground="White" FontSize="14" Padding="10"/>
+                                <TextBlock Grid.Column="5" Text="NOTES" FontWeight="Bold" Foreground="White" FontSize="14" Padding="10"/>
                             </Grid>
                         </Border>
                         
@@ -388,9 +389,9 @@
                         <ItemsControl ItemsSource="{Binding LogEntries}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="models:TimecodeLogEntry">
-                                    <Border Background="#3a3a3a" BorderBrush="#555555" BorderThickness="1,0,1,1" Padding="5">
-                                        <Grid ColumnDefinitions="150,150,150,200,300">
-                                            <!-- Col 0: TC IN for normal rows; bullet + mark timecode for sub-rows -->
+                                    <Border Background="{Binding RowBackground}" BorderBrush="#555555" BorderThickness="1,0,1,1" Padding="5">
+                                        <Grid ColumnDefinitions="150,150,150,200,150,250">
+                                            <!-- Col 0: TC IN (hidden for sub-rows) -->
                                             <TextBox Grid.Column="0"
                                                      Text="{Binding TimeCodeIn}"
                                                      Background="Transparent"
@@ -400,13 +401,6 @@
                                                      BorderThickness="0"
                                                      VerticalAlignment="Center"
                                                      IsVisible="{Binding !IsMarkSubRow}"/>
-                                            <TextBlock Grid.Column="0"
-                                                       Text="{Binding MarkTimecode, StringFormat='  &#x2022;  {0}'}"
-                                                       Foreground="#aaaaaa"
-                                                       FontSize="16"
-                                                       Padding="10"
-                                                       VerticalAlignment="Center"
-                                                       IsVisible="{Binding IsMarkSubRow}"/>
                                             <!-- Col 1: TC OUT (hidden for sub-rows) -->
                                             <TextBox Grid.Column="1"
                                                      Text="{Binding TimeCodeOut}"
@@ -438,8 +432,24 @@
                                                      AcceptsReturn="False"
                                                      VerticalAlignment="Center"
                                                      IsVisible="{Binding !IsMarkSubRow}"/>
-                                            <!-- Col 4: Notes — always visible and editable for all row types -->
-                                            <TextBox Grid.Column="4"
+                                            <!-- Col 4: MARK — normal rows show MarkTimecode; sub-rows show bullet + timecode -->
+                                            <TextBlock Grid.Column="4"
+                                                       Text="{Binding MarkTimecode}"
+                                                       Foreground="White"
+                                                       FontSize="16"
+                                                       Padding="10"
+                                                       TextWrapping="Wrap"
+                                                       VerticalAlignment="Center"
+                                                       IsVisible="{Binding !IsMarkSubRow}"/>
+                                            <TextBlock Grid.Column="4"
+                                                       Text="{Binding MarkTimecode, StringFormat='  &#x2022;  {0}'}"
+                                                       Foreground="#aaaaaa"
+                                                       FontSize="16"
+                                                       Padding="10"
+                                                       VerticalAlignment="Center"
+                                                       IsVisible="{Binding IsMarkSubRow}"/>
+                                            <!-- Col 5: Notes — always visible and editable for all row types -->
+                                            <TextBox Grid.Column="5"
                                                      Text="{Binding Notes}"
                                                      Background="Transparent"
                                                      Foreground="White"

@@ -57,10 +57,12 @@ namespace StudioLog.Models
         public int? ParentEntryId
         {
             get => _parentEntryId;
-            set { _parentEntryId = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsMarkSubRow)); }
+            set { _parentEntryId = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsMarkSubRow)); OnPropertyChanged(nameof(RowBackground)); }
         }
 
         public bool IsMarkSubRow => ParentEntryId.HasValue;
+
+        public string RowBackground => IsMarkSubRow ? "#4a4a4a" : "#3a3a3a";
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
