@@ -90,18 +90,18 @@
         <Menu Grid.Row="0" Background="#1e1e1e">
             <MenuItem Name="FileMenuItem" Header="FILE" Foreground="White">
                 <MenuItem Header="New Session" Command="{Binding NewSessionCommand}"/>
-                <MenuItem Header="Save Session" Command="{Binding SaveSessionCommand}" HotKey="Ctrl+S"/>
-                <MenuItem Header="Open Session" Command="{Binding OpenSessionCommand}" HotKey="Ctrl+O"/>
+                <MenuItem Header="Save Session        Ctrl+S" Command="{Binding SaveSessionCommand}"/>
+                <MenuItem Header="Open Session        Ctrl+O" Command="{Binding OpenSessionCommand}"/>
                 <Separator/>
-                <MenuItem Header="Undo Delete" Command="{Binding UndoDeleteCommand}" IsEnabled="{Binding CanUndo}" HotKey="Ctrl+Z"/>
+                <MenuItem Header="Undo Delete         Ctrl+Z" Command="{Binding UndoDeleteCommand}" IsEnabled="{Binding CanUndo}"/>
                 <Separator/>
-                <MenuItem Name="ExportMenuItem" Header="Export">
+                <MenuItem Name="ExportMenuItem" Header="Export              Ctrl+E">
                     <MenuItem Header="Export to PDF" Command="{Binding ExportPdfCommand}"/>
                     <MenuItem Header="Export to CSV" Command="{Binding ExportCsvCommand}"/>
                     <MenuItem Header="Export to PNG" Command="{Binding ExportPngCommand}"/>
                 </MenuItem>
                 <Separator/>
-                <MenuItem Header="Exit" Command="{Binding ExitCommand}" HotKey="Ctrl+Q"/>
+                <MenuItem Header="Exit                Ctrl+Q" Command="{Binding ExitCommand}"/>
             </MenuItem>
             <MenuItem Header="SETTINGS" Foreground="White">
                 <MenuItem Header="FRAME RATE">

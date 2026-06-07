@@ -143,16 +143,40 @@ namespace StudioLog
                     e.Handled = true;
                 }
             }
-            else if (e.Key == Key.E && e.KeyModifiers == KeyModifiers.Control)
+            else if (e.KeyModifiers == KeyModifiers.Control)
             {
-                var fileMenuItem = this.FindControl<MenuItem>("FileMenuItem");
-                var exportMenuItem = this.FindControl<MenuItem>("ExportMenuItem");
-                if (fileMenuItem != null && exportMenuItem != null)
+                switch (e.Key)
                 {
-                    fileMenuItem.IsSubMenuOpen = true;
-                    exportMenuItem.IsSubMenuOpen = true;
+                    case Key.O:
+                        _viewModel?.OpenSessionCommand.Execute(null);
+                        e.Handled = true;
+                        break;
+                    case Key.S:
+                        _viewModel?.SaveSessionCommand.Execute(null);
+                        e.Handled = true;
+                        break;
+                    case Key.Z:
+                        if (e.Source is not TextBox)
+                        {
+                            _viewModel?.UndoDeleteCommand.Execute(null);
+                            e.Handled = true;
+                        }
+                        break;
+                    case Key.E:
+                        var fileMenuItem = this.FindControl<MenuItem>("FileMenuItem");
+                        var exportMenuItem = this.FindControl<MenuItem>("ExportMenuItem");
+                        if (fileMenuItem != null && exportMenuItem != null)
+                        {
+                            fileMenuItem.IsSubMenuOpen = true;
+                            exportMenuItem.IsSubMenuOpen = true;
+                        }
+                        e.Handled = true;
+                        break;
+                    case Key.Q:
+                        _viewModel?.ExitCommand.Execute(null);
+                        e.Handled = true;
+                        break;
                 }
-                e.Handled = true;
             }
         }
 
