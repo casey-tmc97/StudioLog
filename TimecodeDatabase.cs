@@ -98,6 +98,28 @@ namespace StudioLog.Core
                 // Column might already exist or migration failed - continue anyway
             }
 
+            // Migration: Add ParentEntryId column if it doesn't exist
+            try
+            {
+                var checkParentCol = "SELECT COUNT(*) FROM pragma_table_info('LogEntries') WHERE name='ParentEntryId'";
+                using (var command = new SqliteCommand(checkParentCol, _connection))
+                {
+                    var columnExists = Convert.ToInt32(command.ExecuteScalar()) > 0;
+                    if (!columnExists)
+                    {
+                        var addColumn = "ALTER TABLE LogEntries ADD COLUMN ParentEntryId INTEGER NULL";
+                        using (var alterCommand = new SqliteCommand(addColumn, _connection))
+                        {
+                            alterCommand.ExecuteNonQuery();
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Column might already exist - continue
+            }
+
             // Migration: Rename ArtistName to SessionName in Sessions table
             try
             {
@@ -262,8 +284,8 @@ namespace StudioLog.Core
             if (_connection == null) throw new InvalidOperationException("Database not initialized");
 
             var sql = @"
-                INSERT INTO LogEntries (SessionId, TimeCodeIn, TimeCodeOut, Duration, ClipName, Notes, MarkTimecode)
-                VALUES (@SessionId, @TimeCodeIn, @TimeCodeOut, @Duration, @ClipName, @Notes, @MarkTimecode);
+                INSERT INTO LogEntries (SessionId, TimeCodeIn, TimeCodeOut, Duration, ClipName, Notes, MarkTimecode, ParentEntryId)
+                VALUES (@SessionId, @TimeCodeIn, @TimeCodeOut, @Duration, @ClipName, @Notes, @MarkTimecode, @ParentEntryId);
                 SELECT last_insert_rowid();";
 
             using var command = new SqliteCommand(sql, _connection);
@@ -274,6 +296,7 @@ namespace StudioLog.Core
             command.Parameters.AddWithValue("@ClipName", entry.ClipName ?? "");
             command.Parameters.AddWithValue("@Notes", entry.Notes ?? "");
             command.Parameters.AddWithValue("@MarkTimecode", entry.MarkTimecode ?? "");
+            command.Parameters.AddWithValue("@ParentEntryId", (object?)entry.ParentEntryId ?? DBNull.Value);
 
             var result = await command.ExecuteScalarAsync();
             return Convert.ToInt32(result);
@@ -310,7 +333,10 @@ namespace StudioLog.Core
             if (_connection == null) return new List<TimecodeLogEntry>();
 
             var entries = new List<TimecodeLogEntry>();
-            var sql = "SELECT * FROM LogEntries WHERE SessionId = @SessionId ORDER BY CreatedAt ASC";
+            var sql = @"
+                SELECT * FROM LogEntries
+                WHERE SessionId = @SessionId
+                ORDER BY COALESCE(ParentEntryId, Id), (ParentEntryId IS NOT NULL), Id";
 
             using var command = new SqliteCommand(sql, _connection);
             command.Parameters.AddWithValue("@SessionId", sessionId);
@@ -328,7 +354,8 @@ namespace StudioLog.Core
                     ClipName = reader.IsDBNull(5) ? "" : reader.GetString(5),
                     Notes = reader.IsDBNull(6) ? "" : reader.GetString(6),
                     MarkTimecode = reader.IsDBNull(7) ? "" : reader.GetString(7),
-                    CreatedAt = reader.GetDateTime(8)
+                    CreatedAt = reader.GetDateTime(8),
+                    ParentEntryId = reader.IsDBNull(9) ? null : reader.GetInt32(9)
                 });
             }
 
