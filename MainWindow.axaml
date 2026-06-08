@@ -226,6 +226,8 @@
                 <MenuItem Header="MANUAL" Command="{Binding OpenManualCommand}"/>
                 <MenuItem Header="ABOUT" Command="{Binding OpenAboutCommand}"/>
                 <MenuItem Header="CONTACT" Command="{Binding OpenContactCommand}"/>
+                <Separator/>
+                <MenuItem Header="CHECK FOR UPDATES" Command="{Binding CheckForUpdatesCommand}"/>
             </MenuItem>
         </Menu>
 
