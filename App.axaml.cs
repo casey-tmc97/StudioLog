@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -12,15 +13,24 @@ namespace StudioLog
         {
             // CRITICAL FIX: Configure ReactiveUI to use Avalonia's dispatcher
             RxApp.MainThreadScheduler = AvaloniaScheduler.Instance;
-            
+
             AvaloniaXamlLoader.Load(this);
         }
 
-        public override void OnFrameworkInitializationCompleted()
+        public override async void OnFrameworkInitializationCompleted()
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                desktop.MainWindow = new MainWindow();
+                var splash = new SplashWindow();
+                desktop.MainWindow = splash;
+                splash.Show();
+
+                var mainWindow = new MainWindow();
+                await Task.Delay(2000);
+
+                desktop.MainWindow = mainWindow;
+                mainWindow.Show();
+                splash.Close();
             }
 
             base.OnFrameworkInitializationCompleted();
