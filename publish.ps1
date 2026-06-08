@@ -9,7 +9,7 @@
 
 param(
     [switch]$Debug,
-    [string]$Version = "2.1.2",
+    [string]$Version = "2.1.4",
     [string]$Runtime = "win-x64"
 )
 
