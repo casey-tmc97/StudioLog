@@ -1,0 +1,40 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="StudioLog.UpdateConfirmDialog"
+        Title="Update Available"
+        Width="420"
+        Height="200"
+        Background="#2d2d2d"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <Grid Margin="30">
+        <StackPanel Spacing="20" VerticalAlignment="Center">
+
+            <TextBlock x:Name="MessageText"
+                       FontSize="14"
+                       Foreground="White"
+                       TextWrapping="Wrap"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"/>
+
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        Spacing="12">
+                <Button Content="Install Now"
+                        Click="InstallButton_Click"
+                        Width="120"
+                        Height="35"
+                        Background="#4a90d9"
+                        Foreground="White"/>
+                <Button Content="Cancel"
+                        Click="CancelButton_Click"
+                        Width="100"
+                        Height="35"
+                        Background="#555555"
+                        Foreground="White"/>
+            </StackPanel>
+
+        </StackPanel>
+    </Grid>
+</Window>
