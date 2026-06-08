@@ -1,5 +1,5 @@
+using System.Reflection;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 
 namespace StudioLog
 {
@@ -8,6 +8,8 @@ namespace StudioLog
         public SplashWindow()
         {
             InitializeComponent();
+            var v = Assembly.GetExecutingAssembly().GetName().Version;
+            VersionText.Text = v != null ? $"v{v.Major}.{v.Minor}.{v.Build}" : "v2.1.1";
         }
     }
 }

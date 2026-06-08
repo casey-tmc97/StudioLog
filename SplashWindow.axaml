@@ -8,6 +8,16 @@
         WindowStartupLocation="CenterScreen"
         Topmost="True"
         Background="Black">
-    <Image Source="avares://StudioLog/SplashScreen.png"
-           Stretch="Fill"/>
+    <Grid>
+        <Image Source="avares://StudioLog/SplashScreen.png"
+               Stretch="Fill"/>
+        <TextBlock x:Name="VersionText"
+                   VerticalAlignment="Bottom"
+                   HorizontalAlignment="Left"
+                   Margin="12,0,0,10"
+                   Foreground="White"
+                   FontSize="13"
+                   FontFamily="Consolas"
+                   Opacity="0.75"/>
+    </Grid>
 </Window>
