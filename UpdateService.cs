@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Reflection;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
@@ -25,7 +26,11 @@ namespace StudioLog
 
         public async Task<ReleaseInfo?> GetLatestReleaseAsync()
         {
-            var json = await _http.GetFromJsonAsync<GitHubRelease>(ApiUrl);
+            using var response = await _http.GetAsync(ApiUrl);
+            if (!response.IsSuccessStatusCode) return null;
+
+            var json = await response.Content.ReadFromJsonAsync<GitHubRelease>(
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             if (json == null) return null;
 
             if (!Version.TryParse(json.TagName.TrimStart('v'), out var latestVersion))
