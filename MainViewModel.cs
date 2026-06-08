@@ -27,6 +27,7 @@ namespace StudioLog.ViewModels
         private TimecodeLogEntry? _currentEntry;
         private bool _disposed;
         private bool _hasUnsavedChanges = false;
+        private readonly UpdateService _updateService;
         private readonly Stack<List<TimecodeLogEntry>> _undoStack = new();
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -218,6 +219,7 @@ namespace StudioLog.ViewModels
         public ICommand OpenManualCommand { get; }
         public ICommand OpenAboutCommand { get; }
         public ICommand OpenContactCommand { get; }
+        public ICommand CheckForUpdatesCommand { get; }
         public ICommand ExitCommand { get; }
         public ICommand DeleteEntryCommand { get; }
         public ICommand UndoDeleteCommand { get; }
@@ -239,6 +241,7 @@ namespace StudioLog.ViewModels
             _database = new TimecodeDatabase(_settings.DatabasePath);
             _sessionManager = new SessionManager(_database);
             _exportManager = new ExportManager();
+            _updateService = new UpdateService();
             
             // Initialize LTC audio (but don't start yet - user must click Generate)
             _audioManager = new LTCAudioManager();
@@ -271,6 +274,7 @@ namespace StudioLog.ViewModels
             OpenManualCommand = ReactiveCommand.Create(OpenManual);
             OpenAboutCommand = ReactiveCommand.Create(OpenAbout);
             OpenContactCommand = ReactiveCommand.Create(OpenContact);
+            CheckForUpdatesCommand = ReactiveCommand.CreateFromTask(CheckForUpdatesAsync);
             ExitCommand = ReactiveCommand.Create(Exit);
             DeleteEntryCommand = ReactiveCommand.Create<TimecodeLogEntry>(DeleteEntry);
             UndoDeleteCommand = ReactiveCommand.Create(UndoDelete);
@@ -300,6 +304,10 @@ namespace StudioLog.ViewModels
                     });
                 }
             }, TaskContinuationOptions.OnlyOnFaulted);
+
+            // Check for updates silently 3 seconds after startup
+            Task.Delay(3000).ContinueWith(_ => CheckForUpdatesSilentAsync(),
+                TaskContinuationOptions.None);
         }
 
         private async Task InitializeAsync()
@@ -1640,6 +1648,70 @@ namespace StudioLog.ViewModels
             catch (Exception ex)
             {
                 StatusMessage = $"Could not open email: {ex.Message}";
+            }
+        }
+
+        public async Task CheckForUpdatesAsync()
+        {
+            StatusMessage = "Checking for updates...";
+            try
+            {
+                var release = await _updateService.GetLatestReleaseAsync();
+                if (release == null || !_updateService.IsUpdateAvailable(release))
+                {
+                    var current = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                    var tag = current != null
+                        ? $"v{current.Major}.{current.Minor}.{current.Build}"
+                        : "current";
+                    StatusMessage = $"You're on the latest version ({tag}).";
+                    return;
+                }
+
+                if (Avalonia.Application.Current?.ApplicationLifetime is
+                    Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                    && desktop.MainWindow != null)
+                {
+                    var dialog = new UpdateConfirmDialog(release.TagName);
+                    var confirmed = await dialog.ShowDialog<bool>(desktop.MainWindow);
+                    if (!confirmed)
+                    {
+                        StatusMessage = "Update cancelled.";
+                        return;
+                    }
+                }
+
+                var progress = new Progress<(long downloaded, long total)>(p =>
+                {
+                    var mb = p.downloaded / 1_048_576.0;
+                    var totalMb = p.total > 0 ? $" / {p.total / 1_048_576.0:F1} MB" : string.Empty;
+                    StatusMessage = $"Downloading update... {mb:F1} MB{totalMb}";
+                });
+
+                var path = await _updateService.DownloadInstallerAsync(release, progress);
+                _updateService.LaunchInstallerAndExit(path);
+            }
+            catch
+            {
+                StatusMessage = "Could not reach update server. Check your connection and try again.";
+            }
+        }
+
+        private async void CheckForUpdatesSilentAsync()
+        {
+            try
+            {
+                var release = await _updateService.GetLatestReleaseAsync();
+                if (release != null && _updateService.IsUpdateAvailable(release))
+                {
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        StatusMessage = $"Update available: {release.TagName} — Help > Check for Updates to install";
+                    });
+                }
+            }
+            catch
+            {
+                // Silent — never surface errors from background check
             }
         }
 
