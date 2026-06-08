@@ -306,8 +306,10 @@ namespace StudioLog.ViewModels
             }, TaskContinuationOptions.OnlyOnFaulted);
 
             // Check for updates silently 3 seconds after startup
-            Task.Delay(3000).ContinueWith(_ => CheckForUpdatesSilentAsync(),
-                TaskContinuationOptions.None);
+            _ = Task.Delay(3000).ContinueWith(_ =>
+{
+    if (!_disposed) CheckForUpdatesSilentAsync();
+}, TaskContinuationOptions.None);
         }
 
         private async Task InitializeAsync()
@@ -1679,6 +1681,10 @@ namespace StudioLog.ViewModels
                         return;
                     }
                 }
+                else
+                {
+                    return;
+                }
 
                 var progress = new Progress<(long downloaded, long total)>(p =>
                 {
@@ -1811,7 +1817,8 @@ namespace StudioLog.ViewModels
             _displayTimer?.Dispose();
             _database?.Dispose();
             _audioManager?.Dispose();
-            
+            _updateService?.Dispose();
+
             // Clean up shared NDI singleton on app exit
             LTCAudioManager.DisposeSharedNDI();
 
