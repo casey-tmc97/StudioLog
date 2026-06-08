@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace StudioLog
 {
-    internal class UpdateService
+    internal class UpdateService : IDisposable
     {
         private const string ApiUrl = "https://api.github.com/repos/casey-tmc97/StudioLog/releases/latest";
         private readonly HttpClient _http;
@@ -87,13 +87,19 @@ namespace StudioLog
                 Arguments = "/VERYSILENT /NORESTART",
                 UseShellExecute = true
             };
-            System.Diagnostics.Process.Start(psi);
+            var proc = System.Diagnostics.Process.Start(psi);
+            if (proc == null) return;
 
             if (Avalonia.Application.Current?.ApplicationLifetime is
                 Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.Shutdown();
             }
+        }
+
+        public void Dispose()
+        {
+            _http.Dispose();
         }
 
         private class GitHubRelease
