@@ -1696,6 +1696,10 @@ namespace StudioLog.ViewModels
                 var path = await _updateService.DownloadInstallerAsync(release, progress);
                 _updateService.LaunchInstallerAndExit(path);
             }
+            catch (InvalidOperationException ex) when (ex.Message == "installer-launch-failed")
+            {
+                StatusMessage = "Could not launch installer. Please download manually from github.com/casey-tmc97/StudioLog/releases";
+            }
             catch
             {
                 StatusMessage = "Could not reach update server. Check your connection and try again.";

@@ -88,7 +88,7 @@ namespace StudioLog
                 UseShellExecute = true
             };
             var proc = System.Diagnostics.Process.Start(psi);
-            if (proc == null) return;
+            if (proc == null) throw new InvalidOperationException("installer-launch-failed");
 
             if (Avalonia.Application.Current?.ApplicationLifetime is
                 Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
