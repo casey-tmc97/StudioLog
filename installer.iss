@@ -11,7 +11,7 @@
 ; ============================================================================
 
 #define MyAppName "StudioLog"
-#define MyAppVersion "2.1.1"
+#define MyAppVersion "2.1.2"
 #define MyAppPublisher "StudioLog"
 #define MyAppURL "https://studiolog.app"
 #define MyAppExeName "StudioLog.exe"
