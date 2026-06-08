@@ -19,7 +19,7 @@
                        HorizontalAlignment="Center"/>
             
             <!-- Version -->
-            <TextBlock Text="Version 2.1.0"
+            <TextBlock x:Name="VersionText"
                        FontSize="16"
                        Foreground="#888"
                        HorizontalAlignment="Center"/>
