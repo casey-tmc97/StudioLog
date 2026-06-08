@@ -25,14 +25,16 @@
                         Click="InstallButton_Click"
                         Width="120"
                         Height="35"
-                        Background="#4a90d9"
-                        Foreground="White"/>
+                        Background="#3b82f6"
+                        Foreground="White"
+                        FontWeight="Bold"/>
                 <Button Content="Cancel"
                         Click="CancelButton_Click"
                         Width="100"
                         Height="35"
                         Background="#555555"
-                        Foreground="White"/>
+                        Foreground="White"
+                        FontWeight="Bold"/>
             </StackPanel>
 
         </StackPanel>
