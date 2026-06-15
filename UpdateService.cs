@@ -95,11 +95,12 @@ namespace StudioLog
             var proc = System.Diagnostics.Process.Start(psi);
             if (proc == null) throw new InvalidOperationException("installer-launch-failed");
 
-            if (Avalonia.Application.Current?.ApplicationLifetime is
-                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                desktop.Shutdown();
-            }
+            // Hard-exit immediately so the installer can overwrite all files without
+            // racing against this process's graceful shutdown (Dispose, NDI cleanup, etc.).
+            // A graceful Avalonia Shutdown() stays alive long enough for Inno Setup to
+            // encounter locked files and silently skip them, producing a partial install
+            // that crashes on next launch.
+            Environment.Exit(0);
         }
 
         public void Dispose()
