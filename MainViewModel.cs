@@ -320,7 +320,7 @@ namespace StudioLog.ViewModels
                 int sessionId = await _database.CreateSession("Untitled", DateTime.Now.ToString("yyyy-MM-dd"), string.Empty);
                 _currentSession = await _database.GetActiveSession();
                 
-                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                 {
                     // Initialize with blank fields
                     SessionName = string.Empty;
@@ -343,6 +343,32 @@ namespace StudioLog.ViewModels
                     }
                     
                     StatusMessage = "Ready - Click GENERATE to start generator";
+
+                    // Show What's New dialog on first launch after an update
+                    var currentVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                    var currentTag = currentVersion != null
+                        ? $"v{currentVersion.Major}.{currentVersion.Minor}.{currentVersion.Build}"
+                        : string.Empty;
+
+                    if (!string.IsNullOrEmpty(currentTag) && currentTag != _settings.LastLaunchedVersion)
+                    {
+                        _settings.LastLaunchedVersion = currentTag;
+                        _settings.Save();
+
+                        var changes = GetWhatsNew(currentTag);
+                        if (changes.Count > 0)
+                        {
+                            var mainWindow = Avalonia.Application.Current?.ApplicationLifetime is
+                                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime dl
+                                ? dl.MainWindow : null;
+
+                            var dialog = new WhatsNewDialog(currentTag, changes);
+                            if (mainWindow != null)
+                                await dialog.ShowDialog(mainWindow);
+                            else
+                                dialog.Show();
+                        }
+                    }
                 });
             }
             catch (Exception ex)
@@ -1828,6 +1854,16 @@ namespace StudioLog.ViewModels
 
             _disposed = true;
         }
+
+        private static List<string> GetWhatsNew(string version) => version switch
+        {
+            "v2.1.5" => new List<string>
+            {
+                "Fixed: App fails to open after using the in-app updater on certain Windows 11 machines",
+                "Added: Startup error logging to %AppData%\\StudioLog\\crash.log to help diagnose future issues",
+            },
+            _ => new List<string>()
+        };
 
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {

@@ -20,6 +20,7 @@ namespace StudioLog.Models
         public string? SelectedNDISource { get; set; }
         public string SelectedClockSource { get; set; } = "System Clock";
         public string SelectedTimezoneId { get; set; } = "UTC";
+        public string LastLaunchedVersion { get; set; } = string.Empty;
         
         public bool IsInputActive => SelectedAudioInput != "None";
         

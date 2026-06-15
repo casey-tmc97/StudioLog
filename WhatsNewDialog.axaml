@@ -1,0 +1,40 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="StudioLog.WhatsNewDialog"
+        Title="What's New"
+        Width="460"
+        SizeToContent="Height"
+        Background="#2d2d2d"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <StackPanel Margin="30" Spacing="18">
+
+        <TextBlock x:Name="VersionHeader"
+                   FontSize="16"
+                   FontWeight="Bold"
+                   Foreground="White"/>
+
+        <ItemsControl x:Name="ChangeList">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,3,0,0">
+                        <TextBlock Text="•" Foreground="#3b82f6" FontSize="13" VerticalAlignment="Top" Margin="0,1,0,0"/>
+                        <TextBlock Text="{Binding}" Foreground="#cccccc" FontSize="13" TextWrapping="Wrap" MaxWidth="380"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Button Content="Got it"
+                Click="OkButton_Click"
+                Width="100"
+                Height="34"
+                HorizontalAlignment="Right"
+                Background="#3b82f6"
+                Foreground="White"
+                FontWeight="Bold"
+                Margin="0,4,0,0"/>
+
+    </StackPanel>
+</Window>
