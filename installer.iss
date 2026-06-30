@@ -18,7 +18,7 @@
 #define MyAppDescription "Professional SMPTE LTC Timecode Logger"
 
 [Setup]
-AppId={{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}
+AppId={{12FD62FD-98F4-4ABF-83E3-72814D6E6946}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion}
