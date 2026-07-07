@@ -21,7 +21,10 @@ namespace StudioLog.Models
         public string SelectedClockSource { get; set; } = "System Clock";
         public string SelectedTimezoneId { get; set; } = "UTC";
         public string LastLaunchedVersion { get; set; } = string.Empty;
-        
+
+        public bool CompanionControlEnabled { get; set; } = false;
+        public int CompanionControlPort { get; set; } = 51234;
+
         public bool IsInputActive => SelectedAudioInput != "None";
         
         public string DatabasePath { get; set; } = Path.Combine(
