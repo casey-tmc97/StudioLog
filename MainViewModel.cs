@@ -221,6 +221,7 @@ namespace StudioLog.ViewModels
         public ICommand OpenAboutCommand { get; }
         public ICommand OpenContactCommand { get; }
         public ICommand CheckForUpdatesCommand { get; }
+        public ICommand OpenCompanionSettingsCommand { get; }
         public ICommand ExitCommand { get; }
         public ICommand DeleteEntryCommand { get; }
         public ICommand UndoDeleteCommand { get; }
@@ -291,6 +292,7 @@ namespace StudioLog.ViewModels
             OpenAboutCommand = ReactiveCommand.Create(OpenAbout);
             OpenContactCommand = ReactiveCommand.Create(OpenContact);
             CheckForUpdatesCommand = ReactiveCommand.CreateFromTask(CheckForUpdatesAsync);
+            OpenCompanionSettingsCommand = ReactiveCommand.CreateFromTask(OpenCompanionSettingsAsync);
             ExitCommand = ReactiveCommand.Create(Exit);
             DeleteEntryCommand = ReactiveCommand.Create<TimecodeLogEntry>(DeleteEntry);
             UndoDeleteCommand = ReactiveCommand.Create(UndoDelete);
@@ -1745,6 +1747,22 @@ namespace StudioLog.ViewModels
             else
             {
                 StatusMessage = "Companion control disabled";
+            }
+        }
+
+        public async Task OpenCompanionSettingsAsync()
+        {
+            var dialog = new CompanionSettingsDialog(_settings.CompanionControlEnabled, _settings.CompanionControlPort);
+
+            if (Avalonia.Application.Current?.ApplicationLifetime is
+                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                && desktop.MainWindow != null)
+            {
+                var confirmed = await dialog.ShowDialog<bool>(desktop.MainWindow);
+                if (confirmed)
+                {
+                    ApplyCompanionSettings(dialog.EnabledResult, dialog.PortResult);
+                }
             }
         }
 

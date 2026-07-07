@@ -1,0 +1,57 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="StudioLog.CompanionSettingsDialog"
+        Title="Companion Control"
+        Width="380"
+        Height="240"
+        Background="#2d2d2d"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <Grid Margin="30">
+        <StackPanel Spacing="16" VerticalAlignment="Center">
+
+            <CheckBox x:Name="EnableCheckBox"
+                      Content="Enable Companion control"
+                      Foreground="White"/>
+
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="Port:"
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           Width="40"/>
+                <TextBox x:Name="PortTextBox"
+                         Width="100"
+                         Background="#3a3a3a"
+                         Foreground="White"
+                         BorderBrush="#555555"/>
+            </StackPanel>
+
+            <TextBlock x:Name="ErrorText"
+                       Foreground="#f87171"
+                       FontSize="12"
+                       TextWrapping="Wrap"
+                       IsVisible="False"/>
+
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        Spacing="12">
+                <Button Content="Save"
+                        Click="SaveButton_Click"
+                        Width="100"
+                        Height="35"
+                        Background="#3b82f6"
+                        Foreground="White"
+                        FontWeight="Bold"/>
+                <Button Content="Cancel"
+                        Click="CancelButton_Click"
+                        Width="100"
+                        Height="35"
+                        Background="#555555"
+                        Foreground="White"
+                        FontWeight="Bold"/>
+            </StackPanel>
+
+        </StackPanel>
+    </Grid>
+</Window>

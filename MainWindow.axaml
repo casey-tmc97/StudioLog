@@ -216,11 +216,13 @@
                                   Command="{Binding SetNtpTimezoneCommand}" 
                                   CommandParameter="Cen. Australia Standard Time"/>
                     </MenuItem>
-                    <MenuItem Header="FREE RUN" 
-                              Command="{Binding SetClockSourceCommand}" 
+                    <MenuItem Header="FREE RUN"
+                              Command="{Binding SetClockSourceCommand}"
                               CommandParameter="Free Run"
                               Icon="{Binding IsClockFreeRun, Converter={x:Static converters:BoolToIconConverter.Instance}}"/>
                 </MenuItem>
+                <Separator/>
+                <MenuItem Header="COMPANION CONTROL..." Command="{Binding OpenCompanionSettingsCommand}"/>
             </MenuItem>
             <MenuItem Header="HELP" Foreground="White">
                 <MenuItem Header="MANUAL" Command="{Binding OpenManualCommand}"/>
