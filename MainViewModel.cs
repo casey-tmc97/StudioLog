@@ -1946,6 +1946,11 @@ namespace StudioLog.ViewModels
 
         private static List<string> GetWhatsNew(string version) => version switch
         {
+            "v2.2.0" => new List<string>
+            {
+                "Added: Companion Control - control StudioLog remotely from Bitfocus Companion over TCP. Enable it and set a port from SETTINGS > COMPANION CONTROL...",
+                "Fixed: Installer could silently uninstall a co-installed StudioLog/ShowCast app due to a shared installer ID",
+            },
             "v2.1.5" => new List<string>
             {
                 "Fixed: App fails to open after using the in-app updater on certain Windows 11 machines",
