@@ -28,6 +28,7 @@ namespace StudioLog.ViewModels
         private bool _disposed;
         private bool _hasUnsavedChanges = false;
         private readonly UpdateService _updateService;
+        private readonly CompanionControlServer _companionServer;
         private readonly Stack<List<TimecodeLogEntry>> _undoStack = new();
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -248,7 +249,22 @@ namespace StudioLog.ViewModels
             var frameRate = GetFrameRateValue(_settings.SelectedFrameRate);
             _audioManager.Initialize(frameRate, _settings.SelectedAudioOutput, _settings.SelectedAudioInput, _settings.SelectedNDISource);
             // Don't start - wait for user to click Generate button
-            
+
+            _companionServer = new CompanionControlServer
+            {
+                GetCurrentState = () => (IsGeneratorRunning, IsTimecodeInActive, CurrentTimecode)
+            };
+            _companionServer.GenerateToggleRequested += () => Avalonia.Threading.Dispatcher.UIThread.Post(ToggleGenerator);
+            _companionServer.TimeCodeInRequested += () => Avalonia.Threading.Dispatcher.UIThread.Post(TimeCodeIn);
+            _companionServer.TimeCodeOutRequested += () => Avalonia.Threading.Dispatcher.UIThread.Post(TimeCodeOut);
+            _companionServer.MarkRequested += () => Avalonia.Threading.Dispatcher.UIThread.Post(TimeCodeMark);
+            PropertyChanged += OnPropertyChangedForCompanion;
+
+            if (_settings.CompanionControlEnabled)
+            {
+                StartCompanionServer();
+            }
+
             LogEntries = new ObservableCollection<TimecodeLogEntry>();
 
             ToggleGeneratorCommand = ReactiveCommand.Create(ToggleGenerator);
@@ -1679,6 +1695,59 @@ namespace StudioLog.ViewModels
             }
         }
 
+        private void OnPropertyChangedForCompanion(object? sender, PropertyChangedEventArgs e)
+        {
+            if (!_companionServer.IsRunning) return;
+
+            switch (e.PropertyName)
+            {
+                case nameof(IsGeneratorRunning):
+                    _companionServer.BroadcastGeneratorState(IsGeneratorRunning);
+                    break;
+                case nameof(IsTimecodeInActive):
+                    _companionServer.BroadcastTimecodeInActive(IsTimecodeInActive);
+                    break;
+                case nameof(CurrentTimecode):
+                    _companionServer.BroadcastTimecode(CurrentTimecode);
+                    break;
+            }
+        }
+
+        private void StartCompanionServer()
+        {
+            try
+            {
+                _companionServer.Start(_settings.CompanionControlPort);
+                StatusMessage = $"Companion control listening on port {_settings.CompanionControlPort}";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Companion Control: {ex.Message}";
+            }
+        }
+
+        private void StopCompanionServer()
+        {
+            _companionServer.Stop();
+        }
+
+        public void ApplyCompanionSettings(bool enabled, int port)
+        {
+            _settings.CompanionControlEnabled = enabled;
+            _settings.CompanionControlPort = port;
+            _settings.Save();
+
+            StopCompanionServer();
+            if (enabled)
+            {
+                StartCompanionServer();
+            }
+            else
+            {
+                StatusMessage = "Companion control disabled";
+            }
+        }
+
         public async Task CheckForUpdatesAsync()
         {
             StatusMessage = "Checking for updates...";
@@ -1848,6 +1917,8 @@ namespace StudioLog.ViewModels
             _database?.Dispose();
             _audioManager?.Dispose();
             _updateService?.Dispose();
+            PropertyChanged -= OnPropertyChangedForCompanion;
+            _companionServer?.Dispose();
 
             // Clean up shared NDI singleton on app exit
             LTCAudioManager.DisposeSharedNDI();
