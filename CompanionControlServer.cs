@@ -20,6 +20,7 @@ namespace StudioLog.Core
         private CancellationTokenSource? _cts;
         private readonly List<TcpClient> _clients = new();
         private readonly object _clientsLock = new();
+        private readonly object _writeLock = new();
         private bool _disposed;
 
         public event Action? GenerateToggleRequested;
@@ -183,7 +184,10 @@ namespace StudioLog.Core
             {
                 if (!client.Connected) return;
                 var data = Encoding.ASCII.GetBytes(message + "\n");
-                client.GetStream().Write(data, 0, data.Length);
+                lock (_writeLock)
+                {
+                    client.GetStream().Write(data, 0, data.Length);
+                }
             }
             catch
             {
