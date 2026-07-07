@@ -6,7 +6,7 @@
     <AssemblyName>StudioLog</AssemblyName>
     <RootNamespace>StudioLog</RootNamespace>
     <Product>StudioLog</Product>
-    <Version>2.1.5</Version>
+    <Version>2.1.6</Version>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
