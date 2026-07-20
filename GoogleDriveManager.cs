@@ -22,9 +22,14 @@ namespace StudioLog.Core
             "google-token"
         );
 
-        private static readonly string CredentialsPath = Path.Combine(
+        private static readonly string UserCredentialsPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "StudioLog",
+            "google-credentials.json"
+        );
+
+        private static readonly string BundledCredentialsPath = Path.Combine(
+            AppContext.BaseDirectory,
             "google-credentials.json"
         );
 
@@ -45,21 +50,25 @@ namespace StudioLog.Core
 
         private static OAuthCredentials LoadCredentials()
         {
-            if (!File.Exists(CredentialsPath))
+            // A file the user placed themselves (e.g. their own Google Cloud project) always
+            // wins over the one bundled with the install.
+            string credentialsPath = File.Exists(UserCredentialsPath) ? UserCredentialsPath : BundledCredentialsPath;
+
+            if (!File.Exists(credentialsPath))
             {
                 throw new FileNotFoundException(
-                    $"Google Drive is not configured on this machine. Create {CredentialsPath} " +
+                    $"Google Drive is not configured on this machine. Create {UserCredentialsPath} " +
                     "with {\"ClientId\": \"...\", \"ClientSecret\": \"...\"} using the OAuth Desktop " +
                     "client from the StudioLog Google Cloud project.",
-                    CredentialsPath);
+                    UserCredentialsPath);
             }
 
-            var json = File.ReadAllText(CredentialsPath);
+            var json = File.ReadAllText(credentialsPath);
             var creds = JsonSerializer.Deserialize<OAuthCredentials>(json);
 
             if (creds == null || string.IsNullOrWhiteSpace(creds.ClientId) || string.IsNullOrWhiteSpace(creds.ClientSecret))
             {
-                throw new InvalidDataException($"{CredentialsPath} is missing ClientId or ClientSecret.");
+                throw new InvalidDataException($"{credentialsPath} is missing ClientId or ClientSecret.");
             }
 
             return creds;

@@ -3,7 +3,11 @@ Timecode Logging
 
 ## Google Drive Export Setup
 
-StudioLog can upload PDF/CSV/PNG session logs straight to a Google Drive Shared Drive folder (`File > Export > Google Drive`). This repo is public, so no Google credentials are checked in — each installation needs its own local credentials file, created once per machine by following the steps below.
+StudioLog can upload PDF/CSV/PNG session logs straight to a Google Drive Shared Drive folder (`File > Export > Google Drive`).
+
+**If you installed StudioLog from a release build (the installer or portable ZIP), this works out of the box** — the release bundles a `google-credentials.json` alongside `StudioLog.exe` so nobody has to set up their own Google Cloud project. Just use `File > Export > Google Drive` and sign in when prompted.
+
+The steps below are only needed if you're building StudioLog from source, or want to point your install at your own Google Cloud project instead of the bundled one (a file you create yourself at `%AppData%\StudioLog\google-credentials.json` always takes priority over the bundled one). This repo is public, so no real credentials are ever checked into source — the bundled file is added to the build output by `publish.ps1` at release time, not tracked by git.
 
 ### 1. Create a Google Cloud project
 
@@ -53,3 +57,7 @@ If you downloaded the JSON file from Google instead, its keys are named `client_
 The first time you use `File > Export > Google Drive`, your browser will open to a Google sign-in/consent screen. Approve access with the same account from step 1 — StudioLog caches the resulting token, so this only happens once (or again after `Settings > DISCONNECT GOOGLE DRIVE`).
 
 **Note:** the folder picker starts at a Shared Drive named **Production**, inside a folder named **Artists**. If your Drive doesn't have that structure, it falls back to showing all Shared Drives so you can browse to wherever you want.
+
+### For maintainers: cutting a release
+
+`publish.ps1` automatically copies `%AppData%\StudioLog\google-credentials.json` from the machine running the build into the publish output (and from there into the installer and portable ZIP), so anyone building a release just needs their own credentials file in place first — nothing else to configure. If that file isn't present, the script skips this step and prints a warning; the resulting build still works, but Drive export requires per-machine setup (steps 1-5 above) until a user provides their own credentials file.

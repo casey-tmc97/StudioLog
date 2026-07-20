@@ -64,6 +64,21 @@ if (-not $Debug) {
 dotnet @publishArgs
 if ($LASTEXITCODE -ne 0) { throw "Publish failed" }
 
+# ---- Step 3b: Bundle Google Drive credentials ----
+# Ships this machine's Google Drive OAuth credentials with the build so installed
+# copies work out of the box, without each user creating their own Google Cloud
+# project. Never committed to source (this repo is public) — read fresh from
+# %AppData%\StudioLog\ at build time only. A user can still override it later by
+# placing their own google-credentials.json in that same %AppData% folder, which
+# GoogleDriveManager always prefers over the bundled one.
+$LocalCredentialsPath = Join-Path $env:APPDATA "StudioLog\google-credentials.json"
+if (Test-Path $LocalCredentialsPath) {
+    Copy-Item $LocalCredentialsPath (Join-Path $OutputDir "google-credentials.json") -Force
+    Write-Host "  Bundled Google Drive credentials from $LocalCredentialsPath" -ForegroundColor Green
+} else {
+    Write-Host "  No Google Drive credentials found at $LocalCredentialsPath — skipping (Drive export will require per-machine setup, see README)" -ForegroundColor DarkYellow
+}
+
 # ---- Step 4: Verify critical files ----
 Write-Host "[4/5] Verifying output..." -ForegroundColor Yellow
 $requiredFiles = @(
