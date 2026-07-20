@@ -99,6 +99,12 @@
                     <MenuItem Header="Export to PDF" Command="{Binding ExportPdfCommand}"/>
                     <MenuItem Header="Export to CSV" Command="{Binding ExportCsvCommand}"/>
                     <MenuItem Header="Export to PNG" Command="{Binding ExportPngCommand}"/>
+                    <Separator/>
+                    <MenuItem Header="Google Drive">
+                        <MenuItem Header="Export to PDF" Command="{Binding ExportPdfToDriveCommand}"/>
+                        <MenuItem Header="Export to CSV" Command="{Binding ExportCsvToDriveCommand}"/>
+                        <MenuItem Header="Export to PNG" Command="{Binding ExportPngToDriveCommand}"/>
+                    </MenuItem>
                 </MenuItem>
                 <Separator/>
                 <MenuItem Header="Exit                Ctrl+Q" Command="{Binding ExitCommand}"/>
@@ -223,6 +229,7 @@
                 </MenuItem>
                 <Separator/>
                 <MenuItem Header="COMPANION CONTROL..." Command="{Binding OpenCompanionSettingsCommand}"/>
+                <MenuItem Header="DISCONNECT GOOGLE DRIVE" Command="{Binding DisconnectGoogleDriveCommand}"/>
             </MenuItem>
             <MenuItem Header="HELP" Foreground="White">
                 <MenuItem Header="MANUAL" Command="{Binding OpenManualCommand}"/>

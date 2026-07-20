@@ -22,6 +22,7 @@ namespace StudioLog.ViewModels
         private readonly LTCAudioManager _audioManager;
         private readonly SessionManager _sessionManager;
         private readonly ExportManager _exportManager;
+        private readonly GoogleDriveManager _driveManager;
         private System.Threading.Timer? _displayTimer;
         private Session? _currentSession;
         private TimecodeLogEntry? _currentEntry;
@@ -204,6 +205,10 @@ namespace StudioLog.ViewModels
         public ICommand ExportPdfCommand { get; }
         public ICommand ExportCsvCommand { get; }
         public ICommand ExportPngCommand { get; }
+        public ICommand ExportPdfToDriveCommand { get; }
+        public ICommand ExportCsvToDriveCommand { get; }
+        public ICommand ExportPngToDriveCommand { get; }
+        public ICommand DisconnectGoogleDriveCommand { get; }
         public ICommand TimeCodeInCommand { get; }
         public ICommand TimeCodeOutCommand { get; }
         public ICommand TimeCodeMarkCommand { get; }
@@ -243,6 +248,7 @@ namespace StudioLog.ViewModels
             _database = new TimecodeDatabase(_settings.DatabasePath);
             _sessionManager = new SessionManager(_database);
             _exportManager = new ExportManager();
+            _driveManager = new GoogleDriveManager();
             _updateService = new UpdateService();
             
             // Initialize LTC audio (but don't start yet - user must click Generate)
@@ -275,6 +281,10 @@ namespace StudioLog.ViewModels
             ExportPdfCommand = ReactiveCommand.Create(ExportPdf);
             ExportCsvCommand = ReactiveCommand.Create(ExportCsv);
             ExportPngCommand = ReactiveCommand.Create(ExportPng);
+            ExportPdfToDriveCommand = ReactiveCommand.CreateFromTask(() => ExportToDriveAsync("pdf"));
+            ExportCsvToDriveCommand = ReactiveCommand.CreateFromTask(() => ExportToDriveAsync("csv"));
+            ExportPngToDriveCommand = ReactiveCommand.CreateFromTask(() => ExportToDriveAsync("png"));
+            DisconnectGoogleDriveCommand = ReactiveCommand.CreateFromTask(DisconnectGoogleDriveAsync);
             TimeCodeInCommand = ReactiveCommand.Create(TimeCodeIn);
             TimeCodeOutCommand = ReactiveCommand.Create(TimeCodeOut);
             TimeCodeMarkCommand = ReactiveCommand.Create(TimeCodeMark);
@@ -600,6 +610,121 @@ namespace StudioLog.ViewModels
                     StatusMessage = $"Export failed: {ex.Message}";
                 });
             }
+        }
+
+        private async Task ExportToDriveAsync(string format)
+        {
+            string safeName = $"{SessionName}_{Date}_Log_{Guid.NewGuid():N}.{format}".Replace("/", "-").Replace("\\", "-");
+            string tempPath = Path.Combine(Path.GetTempPath(), safeName);
+            Console.WriteLine($"[DriveExport] Start format={format} tempPath={tempPath}");
+
+            try
+            {
+                switch (format)
+                {
+                    case "pdf":
+                        await _exportManager.ExportToPdf(tempPath, SessionName, Date, Location, LogEntries.ToList());
+                        break;
+                    case "csv":
+                        await _exportManager.ExportToCsv(tempPath, SessionName, Date, Location, LogEntries.ToList());
+                        break;
+                    case "png":
+                        await _exportManager.ExportToPng(tempPath, SessionName, Date, Location, LogEntries.ToList());
+                        break;
+                }
+                Console.WriteLine($"[DriveExport] Local file generated, exists={File.Exists(tempPath)}");
+
+                var (folderId, driveId, loadError) = await ShowDriveFolderPickerAsync();
+                Console.WriteLine($"[DriveExport] Picker returned folderId={folderId} driveId={driveId} loadError={loadError}");
+                if (folderId == null)
+                {
+                    if (loadError != null)
+                    {
+                        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            StatusMessage = $"Drive upload failed: {loadError}";
+                        });
+                    }
+                    Console.WriteLine("[DriveExport] Cancelled (folderId null), returning.");
+                    return;
+                }
+
+                string mimeType = format switch
+                {
+                    "pdf" => "application/pdf",
+                    "csv" => "text/csv",
+                    "png" => "image/png",
+                    _ => "application/octet-stream"
+                };
+
+                string driveFileName = $"{SessionName}_{Date}_Log.{format}".Replace("/", "-").Replace("\\", "-");
+
+                Console.WriteLine($"[DriveExport] Starting upload as {driveFileName} to folderId={folderId} driveId={driveId}");
+                await _driveManager.UploadFileAsync(tempPath, driveFileName, mimeType, folderId, driveId);
+                Console.WriteLine("[DriveExport] Upload call returned successfully.");
+
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    StatusMessage = $"{format.ToUpperInvariant()} uploaded to Google Drive: {driveFileName}";
+                });
+                Console.WriteLine("[DriveExport] StatusMessage set to success.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DriveExport] EXCEPTION: {ex}");
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    StatusMessage = $"Drive upload failed: {ex.Message}";
+                });
+            }
+            finally
+            {
+                try
+                {
+                    if (File.Exists(tempPath)) File.Delete(tempPath);
+                }
+                catch
+                {
+                    // Best-effort temp file cleanup
+                }
+            }
+        }
+
+        private async Task<(string? folderId, string? driveId, string? loadError)> ShowDriveFolderPickerAsync()
+        {
+            var tcs = new TaskCompletionSource<(string?, string?, string?)>();
+
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                var mainWindow = Avalonia.Application.Current?.ApplicationLifetime is
+                    Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                    ? desktop.MainWindow
+                    : null;
+
+                if (mainWindow == null)
+                {
+                    tcs.SetResult((null, null, null));
+                    return;
+                }
+
+                var dialog = new DriveFolderPickerDialog(_driveManager);
+                var confirmed = await dialog.ShowDialog<bool>(mainWindow);
+                tcs.SetResult(confirmed
+                    ? (dialog.SelectedFolderId, dialog.SelectedDriveId, null)
+                    : (null, null, dialog.LoadFailed ? dialog.LoadError : null));
+            });
+
+            return await tcs.Task;
+        }
+
+        private async Task DisconnectGoogleDriveAsync()
+        {
+            _driveManager.Disconnect();
+
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                StatusMessage = "Disconnected from Google Drive.";
+            });
         }
 
         public async void OpenSession()
@@ -1935,6 +2060,7 @@ namespace StudioLog.ViewModels
             _database?.Dispose();
             _audioManager?.Dispose();
             _updateService?.Dispose();
+            _driveManager?.Dispose();
             PropertyChanged -= OnPropertyChangedForCompanion;
             _companionServer?.Dispose();
 

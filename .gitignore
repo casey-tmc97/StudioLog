@@ -24,3 +24,6 @@ Thumbs.db
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Local secrets (never commit — real file lives in %AppData%\StudioLog\)
+google-credentials.json

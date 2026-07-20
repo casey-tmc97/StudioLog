@@ -33,6 +33,8 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.2" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.2" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.2.2" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.75.0" />
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.75.0.4192" />
     <PackageReference Include="ReactiveUI" Version="20.1.63" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10" />
