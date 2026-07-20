@@ -2072,6 +2072,10 @@ namespace StudioLog.ViewModels
 
         private static List<string> GetWhatsNew(string version) => version switch
         {
+            "v2.2.1" => new List<string>
+            {
+                "Added: Export directly to Google Drive - FILE > EXPORT > GOOGLE DRIVE lets you upload PDF/CSV/PNG session logs straight into a Shared Drive folder without saving locally first. Disconnect the linked account from SETTINGS > DISCONNECT GOOGLE DRIVE.",
+            },
             "v2.2.0" => new List<string>
             {
                 "Added: Companion Control - control StudioLog remotely from Bitfocus Companion over TCP. Enable it and set a port from SETTINGS > COMPANION CONTROL...",
